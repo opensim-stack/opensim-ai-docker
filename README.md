@@ -5,17 +5,30 @@
 
 A Docker stack for OpenSimulator and OS Grid that makes it easy to setup an AI enabled virtual world.
 
-This is done by integrating [opensim-console2mcp](https://github.com/opensim-stack/opensim-console2mcp), [opensim-metaverese2mcp](https://github.com/opensim-stack/opensim-metaverse2mcp), and [opensim-opencode](https://github.com/opensim-stack/opensim-opencode) as part of the stack. `opensim-console2mcp` bridges the OpenSimulator REST console to MCP, `opensim-metaverse2mcp` provides a bridge to a bot controlled by MCP, and `opensim-opencode` runs Opencode in server mode preconfigured to use those MCP bridges.
+This is done by integrating [opensim-console2mcp](https://github.com/opensim-stack/opensim-console2mcp), [opensim-metaverse2mcp](https://github.com/opensim-stack/opensim-metaverse2mcp), and [opensim-opencode](https://github.com/opensim-stack/opensim-opencode) as part of the stack. `opensim-console2mcp` bridges the OpenSimulator REST console to MCP, `opensim-metaverse2mcp` provides a bridge to a bot controlled by MCP, and `opensim-opencode` runs Opencode in server mode preconfigured to use those MCP bridges.
 
  * Manage your OpenSimulator server using natural language. Anything that the console can do, your AI can do including region management, user management, configuration and lots more.
- * The AI bot can walk, run or fly to any point in the region, or teleport to others.
- * The AI bot can create, position, scale, rotate and texture prims.
- * The AI bot can create and configure your environment settings.
+ * Start a conversation with the AI bot to start giving it any instructions you like
+ * Bot can walk, run or fly to any point in the region, or teleport to others.
+ * Bot can create, position, scale, rotate and texture prims.
+ * Bot can create and configure your environment settings.
+ * Bot can inspect inventories, send and copy items and more.
+ * Bot can download and upload media of all types.
 
-## Work In Progress!!!!
+## A Warning - This Is Work In Progress
 
-*Note, the current builds do not yet a human interface where you can issue instructions. 
-You can however run an opencode instance (or any other framework that supports MCP) on a completely separate machine, and attach that to the two MCP servers. Full instructions on how to do this will be published very soon, and there will be a in world chat interface*   
+*This is all very experimental! Do not let the bot lose on anything you care about! Take backups of your regions*
+
+## Quick Start
+
+ 1. Install the entire Opensim AI stack using Docker Compose. I recommend starting with [docker-compose.release.yml](docker-compose.release.yml). Use [.env.example](.env.example) for the basis of your environment variables. Hopefully your Docker front end will just let you copy the  whole lot in one go! ([Arcane](https://getarcane.app/) does).
+ 2. Configure the AI provider and model. [TODO - AI configuration](ai-configuration)
+ 2. Get yourself an Opensimulator viewer, I recommend [Firestorm](https://www.firestormviewer.org/). Connect to your new personal Grid using `Admin User` and `changeme` (assuming you haven't changed `OPENSIM_ESTATE_OWNER_FIRST`, `OPENSIM_ESTATE_OWNER_FIRST` or `OPENSIM_ESTATE_OWNER_PASSWORD`).
+ 3. When you login, you will see `Bot User` standing near you. Start an IM conversation with them, and give them an instruction, e.g. 
+ 
+ ```
+ Place a cube prim 2 meters away and scale it x2. 
+ ```
 
 ## Build Types
 
@@ -265,6 +278,13 @@ The metaverse MCP sidecar uses these environment variables:
 - `OPENSIM_LOGIN_URI`
 - `OPENSIM_LOGIN_START`
 - `BOT_LOGIN_TIMEOUT_SECONDS`
+- `OPENCODE_CHAT_ENABLED`
+- `OPENCODE_SCHEME`
+- `OPENCODE_CHAT_HOST` (mapped to `OPENCODE_HOST` inside `opensim-metaverse2mcp`)
+- `OPENCODE_CHAT_PORT` (mapped to `OPENCODE_PORT` inside `opensim-metaverse2mcp`)
+- `OPENCODE_USERNAME`
+- `OPENCODE_PASSWORD` (falls back to `OPENCODE_SERVER_PASSWORD`)
+- `OPENCODE_REQUEST_TIMEOUT_SECONDS`
 
 Default endpoint inside the stack:
 
