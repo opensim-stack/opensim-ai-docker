@@ -15,7 +15,7 @@ services:
         OSGRID_RELEASE_URL: "${OSGRID_RELEASE_URL:-https://download.osgrid.org/osgrid-opensim-04172026.v0.9.3.ef8a36b.zip}"
     image: "${OPENSIM_OSGRID_IMAGE:-opensim-ai-osgrid:latest}"
 
-  opencode-web:
+  opensim-opencode:
     build:
       context: ../opensim-opencode
     image: "${OPENCODE_IMAGE:-opensim-opencode:latest}"

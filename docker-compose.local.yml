@@ -17,7 +17,7 @@ services:
         OPENSIM_GIT_REF: "${OPENSIM_GIT_REF:-master}"
     image: "${OPENSIM_SOURCE_IMAGE:-opensim-ai-standalone:dev}"
 
-  opencode-web:
+  opensim-opencode:
     build:
       context: ../opensim-opencode
     image: "${OPENCODE_IMAGE:-opensim-opencode:latest}"

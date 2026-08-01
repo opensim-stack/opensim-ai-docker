@@ -15,7 +15,7 @@ services:
         OPENSIM_RELEASE_URL: "${OPENSIM_RELEASE_URL:-http://opensimulator.org/dist/opensim-0.9.3.0.tar.gz}"
     image: "${OPENSIM_RELEASE_IMAGE:-opensim-ai-standalone:latest}"
 
-  opencode-web:
+  opensim-opencode:
     build:
       context: ../opensim-opencode
     image: "${OPENCODE_IMAGE:-opensim-opencode:latest}"

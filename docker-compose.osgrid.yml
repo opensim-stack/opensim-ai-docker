@@ -111,7 +111,7 @@ services:
       BOT_LOGIN_TIMEOUT_SECONDS: "${BOT_LOGIN_TIMEOUT_SECONDS:-30}"
       OPENCODE_CHAT_ENABLED: "${OPENCODE_CHAT_ENABLED:-true}"
       OPENCODE_SCHEME: "${OPENCODE_SCHEME:-http}"
-      OPENCODE_HOST: "${OPENCODE_CHAT_HOST:-opencode-web}"
+      OPENCODE_HOST: "${OPENCODE_CHAT_HOST:-opensim-opencode}"
       OPENCODE_PORT: "${OPENCODE_CHAT_PORT:-${OPENCODE_PORT:-${OPENCODE_WEB_PORT:-8998}}}"
       OPENCODE_USERNAME: "${OPENCODE_USERNAME:-}"
       OPENCODE_PASSWORD: "${OPENCODE_PASSWORD:-${OPENCODE_SERVER_PASSWORD:-}}"
@@ -122,7 +122,7 @@ services:
       opensim:
         condition: service_started
 
-  opencode-web-init:
+  opensim-opencode-init:
     image: alpine:3.22
     restart: "no"
     environment:
@@ -152,7 +152,7 @@ services:
     volumes:
       - osgrid-config:/config
 
-  opencode-web:
+  opensim-opencode:
     image: "${OPENCODE_IMAGE:-bithatch/opensim-opencode:latest}"
     pull_policy: always
     restart: unless-stopped
@@ -171,7 +171,7 @@ services:
       - opencode-state:/root/.local/state/opencode
       - opencode-cache:/root/.cache/opencode
     depends_on:
-      opencode-web-init:
+      opensim-opencode-init:
         condition: service_completed_successfully
       opensim-console2mcp:
         condition: service_started
