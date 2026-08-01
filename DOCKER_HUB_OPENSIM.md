@@ -33,9 +33,18 @@ docker pull bithatch/opensim-ai-standalone:latest
 docker pull bithatch/opensim-ai-standalone:dev-latest
 ```
 
+## Direct GitHub Files
+
+- Source mode compose: https://github.com/opensim-stack/opensim-ai-docker/blob/main/docker-compose.yml
+- Source local override: https://github.com/opensim-stack/opensim-ai-docker/blob/main/docker-compose.local.yml
+- Release mode compose: https://github.com/opensim-stack/opensim-ai-docker/blob/main/docker-compose.release.yml
+- Release local override: https://github.com/opensim-stack/opensim-ai-docker/blob/main/docker-compose.release.local.yml
+- Example environment file: https://github.com/opensim-stack/opensim-ai-docker/blob/main/.env.example
+
 ## Project Links
 
 - Main AI Stack (`opensim-ai-docker`): https://github.com/opensim-stack/opensim-ai-docker
 - `opensim-metaverse2mcp` on GitHub: https://github.com/opensim-stack/opensim-metaverse2mcp
+- `opensim-metaverse2mcp` on Docker Hub: https://hub.docker.com/repository/docker/bithatch/opensim-metaverse2mcp/general
 - `opensim-console2mcp` on GitHub: https://github.com/opensim-stack/opensim-console2mcp
 - `opensim-console2mcp` on Docker Hub: https://hub.docker.com/repository/docker/bithatch/opensim-console2mcp/general

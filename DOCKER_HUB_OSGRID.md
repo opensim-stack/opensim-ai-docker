@@ -32,9 +32,16 @@ Or pull/run by image tag directly:
 docker pull bithatch/opensim-ai-osgrid:latest
 ```
 
+## Direct GitHub Files
+
+- OSGrid mode compose: https://github.com/opensim-stack/opensim-ai-docker/blob/main/docker-compose.osgrid.yml
+- OSGrid local override: https://github.com/opensim-stack/opensim-ai-docker/blob/main/docker-compose.osgrid.local.yml
+- Example environment file: https://github.com/opensim-stack/opensim-ai-docker/blob/main/.env.example
+
 ## Project Links
 
 - Main AI Stack (`opensim-ai-docker`): https://github.com/opensim-stack/opensim-ai-docker
 - `opensim-metaverse2mcp` on GitHub: https://github.com/opensim-stack/opensim-metaverse2mcp
+- `opensim-metaverse2mcp` on Docker Hub: https://hub.docker.com/repository/docker/bithatch/opensim-metaverse2mcp/general
 - `opensim-console2mcp` on GitHub: https://github.com/opensim-stack/opensim-console2mcp
 - `opensim-console2mcp` on Docker Hub: https://hub.docker.com/repository/docker/bithatch/opensim-console2mcp/general
