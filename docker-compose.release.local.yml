@@ -1,0 +1,16 @@
+services:
+  opensim-init:
+    build:
+      context: .
+      target: release-runtime
+      args:
+        OPENSIM_RELEASE_URL: "${OPENSIM_RELEASE_URL:-http://opensimulator.org/dist/opensim-0.9.3.0.tar.gz}"
+    image: "${OPENSIM_RELEASE_IMAGE:-opensim-ai-standalone:latest}"
+
+  opensim:
+    build:
+      context: .
+      target: release-runtime
+      args:
+        OPENSIM_RELEASE_URL: "${OPENSIM_RELEASE_URL:-http://opensimulator.org/dist/opensim-0.9.3.0.tar.gz}"
+    image: "${OPENSIM_RELEASE_IMAGE:-opensim-ai-standalone:latest}"

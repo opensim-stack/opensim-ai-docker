@@ -1,0 +1,137 @@
+services:
+  mariadb:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD:-${MYSQL_ROOT_PASSWORD:-rootpassword}}"
+      MARIADB_DATABASE: "${MARIADB_DATABASE:-${MYSQL_DATABASE:-opensim}}"
+      MARIADB_USER: "${MARIADB_USER:-${MYSQL_USER:-opensim}}"
+      MARIADB_PASSWORD: "${MARIADB_PASSWORD:-${MYSQL_PASSWORD:-opensimpassword}}"
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - osgrid-mariadb:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -u root --password=\"$$MARIADB_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  opensim-osgrid-init:
+    image: "${OPENSIM_OSGRID_IMAGE:-bithatch/opensim-ai-osgrid:latest}"
+    entrypoint: ["/opt/opensim/docker/init-osgrid.sh"]
+    restart: "no"
+    environment:
+      OSGRID_REGION_NAME: "${OSGRID_REGION_NAME}"
+      OSGRID_REGION_UUID: "${OSGRID_REGION_UUID}"
+      OSGRID_REGION_LOCATION: "${OSGRID_REGION_LOCATION}"
+      OSGRID_EXTERNAL_HOSTNAME: "${OSGRID_EXTERNAL_HOSTNAME}"
+      OSGRID_INTERNAL_PORT: "${OSGRID_INTERNAL_PORT:-9000}"
+      OPENSIM_ESTATE_NAME: "${OPENSIM_ESTATE_NAME:-My Estate}"
+      OPENSIM_ESTATE_OWNER_FIRST: "${OPENSIM_ESTATE_OWNER_FIRST:-Admin}"
+      OPENSIM_ESTATE_OWNER_LAST: "${OPENSIM_ESTATE_OWNER_LAST:-User}"
+      OPENSIM_ESTATE_OWNER_PASSWORD: "${OPENSIM_ESTATE_OWNER_PASSWORD:-changeme}"
+      OPENSIM_ESTATE_OWNER_EMAIL: "${OPENSIM_ESTATE_OWNER_EMAIL:-admin@example.com}"
+      OPENSIM_ESTATE_OWNER_UUID: "${OPENSIM_ESTATE_OWNER_UUID:-00000000-0000-0000-0000-000000000000}"
+      OPENSIM_GRID_NAME: "${OPENSIM_GRID_NAME:-OSGrid Region}"
+      OPENSIM_GRID_NICK: "${OPENSIM_GRID_NICK:-osgrid}"
+      OPENSIM_WELCOME_MESSAGE: "${OPENSIM_WELCOME_MESSAGE:-Welcome to OSGrid!}"
+      OPENSIM_CONSOLE_MODE: "${OPENSIM_CONSOLE_MODE:-rest}"
+      OPENSIM_CONSOLE_USER: "${OPENSIM_CONSOLE_USER:-ConsoleUser}"
+      OPENSIM_CONSOLE_PASS: "${OPENSIM_CONSOLE_PASS:-ConsolePass}"
+      MARIADB_HOST: "${MARIADB_HOST:-${MYSQL_HOST:-mariadb}}"
+      MARIADB_DATABASE: "${MARIADB_DATABASE:-${MYSQL_DATABASE:-opensim}}"
+      MARIADB_USER: "${MARIADB_USER:-${MYSQL_USER:-opensim}}"
+      MARIADB_PASSWORD: "${MARIADB_PASSWORD:-${MYSQL_PASSWORD:-opensimpassword}}"
+    volumes:
+      - osgrid-config:/config
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  opensim:
+    image: "${OPENSIM_OSGRID_IMAGE:-bithatch/opensim-ai-osgrid:latest}"
+    restart: unless-stopped
+    environment:
+      CONFIG_DIR: /config
+    volumes:
+      - osgrid-config:/config
+      - osgrid-assetcache:/opt/opensim/bin/assetcache
+      - osgrid-maptiles:/opt/opensim/bin/maptiles
+    ports:
+      - "${OSGRID_INTERNAL_PORT:-9000}:9000/tcp"
+      - "${OSGRID_INTERNAL_PORT:-9000}:9000/udp"
+    depends_on:
+      opensim-osgrid-init:
+        condition: service_completed_successfully
+
+  opensim-console2mcp:
+    image: "${OPENSIM_CONSOLE2MCP_IMAGE:-bithatch/opensim-console2mcp:latest}"
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      MCP_TRANSPORT: "${MCP_TRANSPORT:-http}"
+      MCP_HOST: "${MCP_HOST:-0.0.0.0}"
+      MCP_PORT: "${MCP_PORT:-9001}"
+      OPENSIM_CONSOLE_URL: "${OPENSIM_CONSOLE_URL:-http://opensim:9000}"
+      OPENSIM_CONSOLE_USER: "${OPENSIM_CONSOLE_USER:-ConsoleUser}"
+      OPENSIM_CONSOLE_PASS: "${OPENSIM_CONSOLE_PASS:-ConsolePass}"
+    ports:
+      - "${MCP_PORT:-9001}:${MCP_PORT:-9001}/tcp"
+    depends_on:
+      opensim:
+        condition: service_started
+
+  opencode-web-init:
+    image: alpine:3.22
+    restart: "no"
+    environment:
+      OPENCODE_MCP_URL: "${OPENCODE_MCP_URL:-http://opensim-console2mcp:9001/mcp}"
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        cat > /config/opencode.json <<'EOF'
+        {
+          "$$schema": "https://opencode.ai/config.json",
+          "mcp": {
+            "local_host_mcp": {
+              "type": "remote",
+              "url": "${OPENCODE_MCP_URL:-http://opensim-console2mcp:9001/mcp}",
+              "enabled": true
+            }
+          }
+        }
+        EOF
+    volumes:
+      - osgrid-config:/config
+
+  opencode-web:
+    image: "${OPENCODE_IMAGE:-smanx/opencode:latest}"
+    pull_policy: always
+    restart: unless-stopped
+    ports:
+      - "${OPENCODE_WEB_PORT:-4096}:4096/tcp"
+    volumes:
+      - osgrid-config:/workspace
+      - opencode-web-config:/root/.config/opencode
+      - opencode-web-data:/root/.local/share/opencode
+      - opencode-web-state:/root/.local/state/opencode
+      - opencode-web-cache:/root/.cache/opencode
+    depends_on:
+      opencode-web-init:
+        condition: service_completed_successfully
+      opensim-console2mcp:
+        condition: service_started
+
+volumes:
+  osgrid-mariadb:
+  osgrid-config:
+  osgrid-assetcache:
+  osgrid-maptiles:
+  opencode-web-data:
+  opencode-web-state:
+  opencode-web-cache:
+  opencode-web-config:

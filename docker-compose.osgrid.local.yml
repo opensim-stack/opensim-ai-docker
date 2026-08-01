@@ -1,0 +1,16 @@
+services:
+  opensim-osgrid-init:
+    build:
+      context: .
+      target: osgrid-runtime
+      args:
+        OSGRID_RELEASE_URL: "${OSGRID_RELEASE_URL:-https://download.osgrid.org/osgrid-opensim-04172026.v0.9.3.ef8a36b.zip}"
+    image: "${OPENSIM_OSGRID_IMAGE:-opensim-ai-osgrid:latest}"
+
+  opensim:
+    build:
+      context: .
+      target: osgrid-runtime
+      args:
+        OSGRID_RELEASE_URL: "${OSGRID_RELEASE_URL:-https://download.osgrid.org/osgrid-opensim-04172026.v0.9.3.ef8a36b.zip}"
+    image: "${OPENSIM_OSGRID_IMAGE:-opensim-ai-osgrid:latest}"

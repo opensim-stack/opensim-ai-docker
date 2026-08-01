@@ -1,0 +1,278 @@
+#!/usr/bin/env python3
+# This piece of code is published by thomax (txOh) (c) 2010 under the
+# Artistic License 1.0 (http://www.perlfoundation.org/artistic_license_1_0)
+# Modifications (c) 2013 BlueWall
+ 
+import argparse
+import socket
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+import xml.dom.minidom
+ 
+class UserConsoleClient():
+
+   def __init__(self, addr, username, password, debug=False):
+       self.addr = addr.rstrip('/') + '/'
+       self.debug = debug
+       self.last_line_number = 0
+       self.suppress_input_echo = True
+       self.suppress_poll_exceptions = True
+       self.poll_exception_notice_printed = False
+
+       data = self._post('StartSession/', {
+           'USER': username,
+           'PASS': password
+       })
+       if self.debug:
+           print("DEBUG: StartSession response received")
+
+       dom = xml.dom.minidom.parseString(data)
+       elem = dom.getElementsByTagName('SessionID')
+       self.sessionid = elem[0].childNodes[0].nodeValue
+       elem = dom.getElementsByTagName('Prompt')
+       self.prompt = elem[0].childNodes[0].nodeValue
+
+   def _post(self, endpoint, params, timeout=None, allow_timeout=False):
+       url = self.addr + endpoint
+       encoded = urllib.parse.urlencode(params).encode('utf-8')
+       if self.debug:
+           print(f"DEBUG: POST {url} payload={encoded!r} timeout={timeout}")
+       req = urllib.request.Request(url, data=encoded)
+       try:
+           with urllib.request.urlopen(req, timeout=timeout) as response:
+               return response.read()
+       except (TimeoutError, socket.timeout) as exc:
+           if allow_timeout:
+               if self.debug:
+                   print(f"DEBUG: timeout reading {endpoint}: {exc}")
+               return b''
+           raise
+       except urllib.error.URLError as exc:
+           if allow_timeout and isinstance(exc.reason, socket.timeout):
+               if self.debug:
+                   print(f"DEBUG: timeout reading {endpoint}: {exc.reason}")
+               return b''
+           raise
+
+   def close(self):
+       data = self._post('CloseSession/', {
+           'ID': self.sessionid
+       })
+       if self.debug:
+           print(data.decode('utf-8', errors='replace'))
+
+   def do_cmd(self, cmd):
+       data = self._post('SessionCommand/', {
+           'ID': self.sessionid,
+           'COMMAND': cmd.strip()
+       })
+       if self.debug:
+           print("DEBUG: SessionCommand RECV = %s" % data)
+       dom = xml.dom.minidom.parseString(data)
+       elem =  dom.getElementsByTagName('Result')
+       if not elem:
+           return ""
+       if not elem[0].childNodes:
+           return ""
+       return elem[0].childNodes[0].nodeValue
+
+   def sync_scrollback_cursor(self, read_timeout=3.0):
+       """Fetch initial backlog once and advance line cursor without printing it."""
+       result = self._post(
+           'ReadResponses/' + self.sessionid + '/',
+           {},
+           timeout=read_timeout,
+           allow_timeout=True
+       )
+       if not result:
+           return 0
+
+       dom = xml.dom.minidom.parseString(result)
+       lines = dom.getElementsByTagName('Line')
+       seen = 0
+       for line in lines:
+           number_attr = line.getAttribute('Number')
+           try:
+               number = int(number_attr) if number_attr else 0
+           except ValueError:
+               number = 0
+           if number and number > self.last_line_number:
+               self.last_line_number = number
+           seen += 1
+       return seen
+
+   def read_buffer(self, read_timeout=0.8):
+       result = self._post(
+           'ReadResponses/' + self.sessionid + '/',
+           {},
+           timeout=read_timeout,
+           allow_timeout=True
+       )
+
+       if not result:
+           return 0
+
+       if self.debug:
+           print(f"DEBUG: RECV = {result!r}")
+       dom = xml.dom.minidom.parseString(result)
+
+       lines = dom.getElementsByTagName('Line')
+       lines_printed = 0
+       for line in lines:
+           number_attr = line.getAttribute('Number')
+           try:
+               number = int(number_attr) if number_attr else 0
+           except ValueError:
+               number = 0
+
+           # Avoid re-printing old scrollback lines.
+           if number and number <= self.last_line_number:
+               continue
+
+           text_parts = []
+           for node in line.childNodes:
+               if node.nodeType == node.TEXT_NODE:
+                   text_parts.append(node.nodeValue)
+           text = ''.join(text_parts).strip()
+
+           is_prompt = line.getAttribute('Prompt').lower() == 'true'
+           is_input = line.getAttribute('Input').lower() == 'true'
+
+           if is_prompt and text:
+               # Keep local prompt synchronized without printing duplicate prompt lines.
+               self.prompt = text
+               if number and number > self.last_line_number:
+                   self.last_line_number = number
+               continue
+
+           if self.suppress_input_echo and is_input:
+               if number and number > self.last_line_number:
+                   self.last_line_number = number
+               continue
+
+           if self.suppress_poll_exceptions and text:
+               if ('Exception in poll service thread: System.NullReferenceException' in text
+                       or 'at OpenSim.Framework.Servers.HttpServer.PollServiceRequestManager.PoolWorkerJob' in text):
+                   if not self.poll_exception_notice_printed:
+                       print('NOTE: Suppressing repeated poll-service NullReferenceException lines from server output.')
+                       self.poll_exception_notice_printed = True
+                   if number and number > self.last_line_number:
+                       self.last_line_number = number
+                   continue
+
+           if text:
+               print(text)
+               lines_printed += 1
+
+           if number and number > self.last_line_number:
+               self.last_line_number = number
+
+       return lines_printed
+
+   def read_buffer_until_quiet(self, timeout_seconds=2.5, poll_interval=0.2, max_reads=6):
+       """Poll ReadResponses briefly to capture delayed command output without long stalls."""
+       total_lines = 0
+       deadline = time.time() + max(timeout_seconds, 0)
+       reads = 0
+
+       while time.time() < deadline and reads < max(max_reads, 1):
+           remaining = max(deadline - time.time(), 0.05)
+           lines = self.read_buffer(read_timeout=min(0.8, remaining))
+           total_lines += lines
+           reads += 1
+           if lines == 0 and reads > 1:
+               break
+           if time.time() < deadline:
+               time.sleep(max(poll_interval, 0.05))
+
+       return total_lines
+ 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='Connect to an OpenSimulator REST console and run commands.'
+    )
+    parser.add_argument(
+        '--url',
+        default='http://terra:9000/',
+        help='Base URL of the OpenSimulator REST console (default: %(default)s)'
+    )
+    parser.add_argument(
+        '--user',
+        default='username',
+        help='REST API username (default: %(default)s)'
+    )
+    parser.add_argument(
+        '--pass',
+        dest='password',
+        default='userpass',
+        help='REST API password (default: %(default)s)'
+    )
+    parser.add_argument(
+        '--read-timeout',
+        type=float,
+        default=2.5,
+        help='Max seconds to poll for output after each command (default: %(default)s)'
+    )
+    parser.add_argument(
+        '--poll-interval',
+        type=float,
+        default=0.2,
+        help='Seconds between ReadResponses polls (default: %(default)s)'
+    )
+    parser.add_argument(
+        '--max-reads',
+        type=int,
+        default=6,
+        help='Max ReadResponses attempts per command (default: %(default)s)'
+    )
+    parser.add_argument(
+        '--drain-on-start',
+        action='store_true',
+        help='Drain existing startup scrollback before prompting'
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Enable debug request/response logging'
+    )
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    console = UserConsoleClient(args.url, args.user, args.password, debug=args.debug)
+    # synced = console.sync_scrollback_cursor(read_timeout=3.0)
+    # if args.debug:
+    #     print(f"DEBUG: synced initial scrollback cursor across {synced} lines")
+    # if args.drain_on_start:
+    #     drained = console.read_buffer_until_quiet(
+    #         timeout_seconds=min(args.read_timeout, 2.0),
+    #         poll_interval=args.poll_interval,
+    #         max_reads=max(2, min(args.max_reads, 6))
+    #     )
+    #     print(f"Drained {drained} existing console lines from scrollback buffer")
+    print('quit with a "."')
+    cmd = ""
+    while cmd != ".":
+        if cmd != "":
+            result = console.do_cmd(cmd)
+            lines_printed = console.read_buffer_until_quiet(
+                timeout_seconds=args.read_timeout,
+                poll_interval=args.poll_interval,
+                max_reads=args.max_reads
+            )
+            if cmd.strip() and lines_printed == 0 and result == 'OK':
+                print("No new console output received for that command.")
+            if cmd.strip().lower() == "help" and lines_printed == 0:
+                print("NOTE: REST console help is protocol/client-side in OpenSim. "
+                      "Try commands like 'show version', 'show info', or 'show users'.")
+            if result and 'OK' not in result:
+                print(f"Command result: {result}")
+        cmd = input("%s" % console.prompt)
+    console.close()
+
+
+if __name__ == '__main__':
+    main()

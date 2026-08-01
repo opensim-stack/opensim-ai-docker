@@ -1,0 +1,18 @@
+services:
+  opensim-init:
+    build:
+      context: .
+      target: source-runtime
+      args:
+        OPENSIM_GIT_URL: "${OPENSIM_GIT_URL:-git://opensimulator.org/git/opensim}"
+        OPENSIM_GIT_REF: "${OPENSIM_GIT_REF:-master}"
+    image: "${OPENSIM_SOURCE_IMAGE:-opensim-ai-standalone:dev}"
+
+  opensim:
+    build:
+      context: .
+      target: source-runtime
+      args:
+        OPENSIM_GIT_URL: "${OPENSIM_GIT_URL:-git://opensimulator.org/git/opensim}"
+        OPENSIM_GIT_REF: "${OPENSIM_GIT_REF:-master}"
+    image: "${OPENSIM_SOURCE_IMAGE:-opensim-ai-standalone:dev}"
