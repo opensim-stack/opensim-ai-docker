@@ -5,13 +5,17 @@
 
 A Docker stack for OpenSimulator and OS Grid that makes it easy to setup an AI enabled virtual world.
 
-This is done by integrating [opensim-console2mcp](https://github.com/opensim-stack/opensim-console2mcp),  [opensim-metaverese2mcp](https://github.com/opensim-stack/opensim-metaverse2mcp) and [opencode](https://opencode.ai/) as part of the stack. `opensim-console2mcp` bridges the OpenSimulator REST console to MCP, `opensim-metaverse2mcp` provides a bridge to a bot controlled by MCP and `opencode-web` talks to those MCP bridges.
+This is done by integrating [opensim-console2mcp](https://github.com/opensim-stack/opensim-console2mcp), [opensim-metaverese2mcp](https://github.com/opensim-stack/opensim-metaverse2mcp), and [opensim-opencode](https://github.com/opensim-stack/opensim-opencode) as part of the stack. `opensim-console2mcp` bridges the OpenSimulator REST console to MCP, `opensim-metaverse2mcp` provides a bridge to a bot controlled by MCP, and `opensim-opencode` runs Opencode in server mode preconfigured to use those MCP bridges.
 
  * Manage your OpenSimulator server using natural language. Anything that the console can do, your AI can do including region management, user management, configuration and lots more.
  * The AI bot can walk, run or fly to any point in the region, or teleport to others.
  * The AI bot can create, position, scale, rotate and texture prims.
  * The AI bot can create and configure your environment settings.
-*
+
+## Work In Progress!!!!
+
+*Note, the current builds do not yet a human interface where you can issue instructions. 
+You can however run an opencode instance (or any other framework that supports MCP) on a completely separate machine, and attach that to the two MCP servers. Full instructions on how to do this will be published very soon, and there will be a in world chat interface*   
 
 ## Build Types
 
@@ -173,12 +177,6 @@ The generated `Regions/Region.ini` contains:
 - ExternalHostName (`OSGRID_EXTERNAL_HOSTNAME`)
 
 
-## Accessing Opencode
-
-The stack starts an Opencode Web server, so to interact with the AI you will need a browser. You can either use an external browser, or access directly in world.
- 
-Create an object with a MOAP (Media-On-A-Prim) pointing at `http://<host>:4096` (or your mapped host/port), and you get an AI prompt that can perform most server and user management. It also has access to the OpenSimulator configuration directory and can edit it directly when needed (for example, creating regions).
-
 ## Standalone (MariaDB) Variables
 
 These apply to modes 1 and 2:
@@ -305,17 +303,20 @@ Notes:
 - This image defaults to HTTP transport for remote MCP access in stack deployments.
 - To run classic subprocess mode instead, set `MCP_TRANSPORT=stdio` and remove port mapping.
 
-## Opencode Web (smanx/opencode)
+## Opencode Server (opensim-opencode)
 
-This stack also includes an Opencode web UI service using
-`smanx/opencode:latest`.
+This stack includes an Opencode server service using
+`bithatch/opensim-opencode:latest`.
 
 Defaults:
 
-- Web UI port: `4096` (`OPENCODE_WEB_PORT`)
+- Server port: `8998` (`OPENCODE_PORT`, fallback `OPENCODE_WEB_PORT` for compatibility)
 - MCP endpoint URL for Opencode: `http://opensim-console2mcp:9001/mcp` (`OPENCODE_MCP_URL`)
 - Metaverse MCP endpoint URL for Opencode: `http://opensim-metaverse2mcp:8999/mcp` (`OPENCODE_METAVERSE_MCP_URL`)
 - MCP auth: none by default
+- Host bind: `0.0.0.0` (`OPENCODE_HOST`)
+- Server password pass-through: `OPENCODE_SERVER_PASSWORD`
+- Project directory: `/workspace` (`OPENCODE_PROJECT_DIR`)
 
 At startup, an init container writes `opencode.json` into the shared config
 volume so Opencode is preconfigured to use the MCP sidecar.
@@ -347,10 +348,10 @@ Volume mappings used by the service:
 - OSGrid stack:
   - `osgrid-config` -> `/workspace`
 - All stacks:
-  - `opencode-web-data` -> `/root/.local/share/opencode`
-  - `opencode-web-state` -> `/root/.local/state/opencode`
-  - `opencode-web-cache` -> `/root/.cache/opencode`
-  - `opencode-web-config` -> `/root/.config/opencode`
+  - `opencode-data` -> `/root/.local/share/opencode`
+  - `opencode-state` -> `/root/.local/state/opencode`
+  - `opencode-cache` -> `/root/.cache/opencode`
+  - `opencode-config` -> `/root/.config/opencode`
 
 ## Publish Images To Docker Hub (bithatch)
 

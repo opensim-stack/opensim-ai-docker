@@ -16,3 +16,8 @@ services:
         OPENSIM_GIT_URL: "${OPENSIM_GIT_URL:-git://opensimulator.org/git/opensim}"
         OPENSIM_GIT_REF: "${OPENSIM_GIT_REF:-master}"
     image: "${OPENSIM_SOURCE_IMAGE:-opensim-ai-standalone:dev}"
+
+  opencode-web:
+    build:
+      context: ../opensim-opencode
+    image: "${OPENCODE_IMAGE:-opensim-opencode:latest}"

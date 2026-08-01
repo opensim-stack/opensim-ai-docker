@@ -146,17 +146,23 @@ services:
       - osgrid-config:/config
 
   opencode-web:
-    image: "${OPENCODE_IMAGE:-smanx/opencode:latest}"
+    image: "${OPENCODE_IMAGE:-bithatch/opensim-opencode:latest}"
     pull_policy: always
     restart: unless-stopped
+    environment:
+      OPENCODE_HOST: "${OPENCODE_HOST:-0.0.0.0}"
+      OPENCODE_PORT: "${OPENCODE_PORT:-${OPENCODE_WEB_PORT:-8998}}"
+      OPENCODE_SERVER_PASSWORD: "${OPENCODE_SERVER_PASSWORD:-}"
+      OPENCODE_PROJECT_DIR: "${OPENCODE_PROJECT_DIR:-/workspace}"
+      OPENCODE_SERVER_EXTRA_ARGS: "${OPENCODE_SERVER_EXTRA_ARGS:-}"
     ports:
-      - "${OPENCODE_WEB_PORT:-4096}:4096/tcp"
+      - "${OPENCODE_PORT:-${OPENCODE_WEB_PORT:-8998}}:8998/tcp"
     volumes:
       - osgrid-config:/workspace
-      - opencode-web-config:/root/.config/opencode
-      - opencode-web-data:/root/.local/share/opencode
-      - opencode-web-state:/root/.local/state/opencode
-      - opencode-web-cache:/root/.cache/opencode
+      - opencode-config:/root/.config/opencode
+      - opencode-data:/root/.local/share/opencode
+      - opencode-state:/root/.local/state/opencode
+      - opencode-cache:/root/.cache/opencode
     depends_on:
       opencode-web-init:
         condition: service_completed_successfully
@@ -170,7 +176,7 @@ volumes:
   osgrid-config:
   osgrid-assetcache:
   osgrid-maptiles:
-  opencode-web-data:
-  opencode-web-state:
-  opencode-web-cache:
-  opencode-web-config:
+  opencode-data:
+  opencode-state:
+  opencode-cache:
+  opencode-config:
