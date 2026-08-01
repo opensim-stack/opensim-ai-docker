@@ -1,27 +1,35 @@
-# OpenSim AI Stack - Source Build Type
+# OpenSim AI Stack - OpenSim Image
 
-This image/tag is for the **Source** build type of the OpenSim Stack project.
+This Docker Hub page covers the standalone OpenSim image used by the OpenSim Stack project.
 
 **OpenSim Stack**: *"A docker stack to get an AI integrated virtual world up and running in minutes."*
 
-Source mode runs OpenSim standalone with MariaDB, plus MCP and web tooling. It is intended for development workflows where you want a source-oriented runtime image/tag.
+OpenSim mode runs OpenSim standalone with MariaDB, plus MCP and web tooling.
 
-## Image And Tag
+## Image And Tags
 
 - Repository: `bithatch/opensim-ai-standalone`
-- Source tag: `dev-latest`
+- Release tag: `latest` (release build type)
+- Dev tag: `dev-latest` (source/dev build type)
 
 ## Quick Start
 
-Use the source-mode compose stack:
+Run release mode:
+
+```bash
+docker compose -f docker-compose.release.yml up -d
+```
+
+Run source/dev mode:
 
 ```bash
 docker compose up -d
 ```
 
-Or pull/run by image tag directly:
+Or pull by tag directly:
 
 ```bash
+docker pull bithatch/opensim-ai-standalone:latest
 docker pull bithatch/opensim-ai-standalone:dev-latest
 ```
 
