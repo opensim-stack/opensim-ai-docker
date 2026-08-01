@@ -206,6 +206,7 @@ These apply to modes 1 and 2:
 - OPENSIM_LOGIN_PASSWORD
 - OPENSIM_LOGIN_EMAIL
 - OPENSIM_LOGIN_UUID
+- OPENSIM_LOGIN_MODEL
 - MARIADB_HOST
 - MARIADB_DATABASE
 - MARIADB_USER
@@ -275,8 +276,10 @@ Bot bootstrap behavior:
 
 - `OPENSIM_CREATE_BOT_USER=true` adds a startup console command that creates the
   bot user using `OPENSIM_LOGIN_FIRSTNAME`, `OPENSIM_LOGIN_LASTNAME`,
-  `OPENSIM_LOGIN_PASSWORD`, `OPENSIM_LOGIN_EMAIL`, and `OPENSIM_LOGIN_UUID`.
+  `OPENSIM_LOGIN_PASSWORD`, `OPENSIM_LOGIN_EMAIL`, `OPENSIM_LOGIN_UUID`, and
+  `OPENSIM_LOGIN_MODEL`.
 - If `OPENSIM_LOGIN_UUID` is blank, init generates a UUID automatically.
+- Set `OPENSIM_LOGIN_MODEL` to `""` if you want an empty model/avatar template.
 
 ## OpenSim MCP Server (opensim-console2mcp)
 

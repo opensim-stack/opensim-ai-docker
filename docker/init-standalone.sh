@@ -31,6 +31,7 @@ OPENSIM_LOGIN_LASTNAME="${OPENSIM_LOGIN_LASTNAME:-User}"
 OPENSIM_LOGIN_PASSWORD="${OPENSIM_LOGIN_PASSWORD:-botpassword}"
 OPENSIM_LOGIN_EMAIL="${OPENSIM_LOGIN_EMAIL:-bot@example.com}"
 OPENSIM_LOGIN_UUID="${OPENSIM_LOGIN_UUID:-}"
+OPENSIM_LOGIN_MODEL="${OPENSIM_LOGIN_MODEL:-Admin User}"
 
 OPENSIM_REGION_NAME_SAFE="$(printf '%s' "${OPENSIM_REGION_NAME}" | tr ' ' '_' | tr -cd 'A-Za-z0-9_-')"
 
@@ -42,7 +43,7 @@ export OPENSIM_HOSTNAME OPENSIM_REGION_NAME OPENSIM_REGION_X OPENSIM_REGION_Y \
     OPENSIM_CONSOLE_MODE OPENSIM_CONSOLE_USER OPENSIM_CONSOLE_PASS \
     MARIADB_HOST MARIADB_DATABASE MARIADB_USER MARIADB_PASSWORD \
     OPENSIM_CREATE_BOT_USER OPENSIM_LOGIN_FIRSTNAME OPENSIM_LOGIN_LASTNAME \
-    OPENSIM_LOGIN_PASSWORD OPENSIM_LOGIN_EMAIL OPENSIM_LOGIN_UUID
+    OPENSIM_LOGIN_PASSWORD OPENSIM_LOGIN_EMAIL OPENSIM_LOGIN_UUID OPENSIM_LOGIN_MODEL
 
 printf '[init] Waiting for MariaDB at %s...\n' "${MARIADB_HOST}"
 attempts=0
@@ -87,15 +88,28 @@ if [ "$(printf '%s' "${OPENSIM_CREATE_BOT_USER}" | tr '[:upper:]' '[:lower:]')" 
     fi
 
     touch "${STARTUP_FILE}"
-    if ! grep -Fq "# opensim-ai-docker bot bootstrap" "${STARTUP_FILE}" 2>/dev/null; then
-        {
-            printf '\n# opensim-ai-docker bot bootstrap\n'
-            printf 'create user "%s" "%s" "%s" "%s" "%s"\n' \
-                "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}" \
-                "${OPENSIM_LOGIN_PASSWORD}" "${OPENSIM_LOGIN_EMAIL}" "${OPENSIM_LOGIN_UUID}"
-        } >> "${STARTUP_FILE}"
-        printf '[init] Added startup command to create bot user %s %s.\n' "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}"
-    fi
+    TMP_FILE="${STARTUP_FILE}.tmp.$$"
+    # Replace previously managed bot bootstrap blocks (legacy and current formats).
+    awk '
+        BEGIN { in_block=0; skip_next=0 }
+        /^# opensim-ai-docker bot bootstrap begin$/ { in_block=1; next }
+        in_block && /^# opensim-ai-docker bot bootstrap end$/ { in_block=0; next }
+        in_block { next }
+        /^# opensim-ai-docker bot bootstrap$/ { skip_next=1; next }
+        skip_next { skip_next=0; next }
+        { print }
+    ' "${STARTUP_FILE}" > "${TMP_FILE}"
+    mv "${TMP_FILE}" "${STARTUP_FILE}"
+
+    {
+        printf '\n# opensim-ai-docker bot bootstrap begin\n'
+        printf 'create user "%s" "%s" "%s" "%s" "%s" "%s"\n' \
+            "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}" \
+            "${OPENSIM_LOGIN_PASSWORD}" "${OPENSIM_LOGIN_EMAIL}" \
+            "${OPENSIM_LOGIN_UUID}" "${OPENSIM_LOGIN_MODEL}"
+        printf '# opensim-ai-docker bot bootstrap end\n'
+    } >> "${STARTUP_FILE}"
+    printf '[init] Updated startup command to create bot user %s %s.\n' "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}"
 fi
 
 printf '[init] Standalone config generation complete.\n'
