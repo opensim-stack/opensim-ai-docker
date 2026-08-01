@@ -20,6 +20,14 @@ if [ -f "${CONFIG_DIR}/Regions/Region.ini" ]; then
     cp -f "${CONFIG_DIR}/Regions/Region.ini" "${BIN_DIR}/Regions/Region.ini"
 fi
 
+if [ -f "${CONFIG_DIR}/startup_commands.txt" ]; then
+    cp -f "${CONFIG_DIR}/startup_commands.txt" "${BIN_DIR}/startup_commands.txt"
+fi
+
+if [ -f "${CONFIG_DIR}/shutdown_commands.txt" ]; then
+    cp -f "${CONFIG_DIR}/shutdown_commands.txt" "${BIN_DIR}/shutdown_commands.txt"
+fi
+
 if [ ! -f "${BIN_DIR}/config-include/FlotsamCache.ini" ] && [ -f "${BIN_DIR}/config-include/FlotsamCache.ini.example" ]; then
     cp "${BIN_DIR}/config-include/FlotsamCache.ini.example" "${BIN_DIR}/config-include/FlotsamCache.ini"
     printf '[opensim] Created FlotsamCache.ini from example.\n'

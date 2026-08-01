@@ -63,6 +63,7 @@ By default, compose files use published images via these variables:
 - `OPENSIM_SOURCE_IMAGE` (default `bithatch/opensim-ai-standalone:dev-latest`)
 - `OPENSIM_RELEASE_IMAGE` (default `bithatch/opensim-ai-standalone:latest`)
 - `OPENSIM_OSGRID_IMAGE` (default `bithatch/opensim-ai-osgrid:latest`)
+- `OPENSIM_METAVERSE2MCP_IMAGE` (default `bithatch/opensim-metaverse2mcp:latest`)
 
 The helper scripts use local override compose files (`docker-compose.*.local.yml`) to
 build and run local images with the current local tags.
@@ -199,6 +200,12 @@ These apply to modes 1 and 2:
 - OPENSIM_CONSOLE_MODE
 - OPENSIM_CONSOLE_USER
 - OPENSIM_CONSOLE_PASS
+- OPENSIM_CREATE_BOT_USER
+- OPENSIM_LOGIN_FIRSTNAME
+- OPENSIM_LOGIN_LASTNAME
+- OPENSIM_LOGIN_PASSWORD
+- OPENSIM_LOGIN_EMAIL
+- OPENSIM_LOGIN_UUID
 - MARIADB_HOST
 - MARIADB_DATABASE
 - MARIADB_USER
@@ -235,6 +242,42 @@ docker compose down -v
 docker compose up -d
 ```
 
+## OpenSim Metaverse MCP Server (opensim-metaverse2mcp)
+
+This project also runs a bot-side MCP service using
+`bithatch/opensim-metaverse2mcp:latest`.
+
+The service logs in a bot avatar and exposes in-world tools (movement, prim and
+environment actions) over MCP HTTP.
+
+The metaverse MCP sidecar uses these environment variables:
+
+- `OPENSIM_METAVERSE2MCP_IMAGE`
+- `METAVERSE_MCP_TRANSPORT` (`http` or `sse`)
+- `METAVERSE_MCP_HOST`
+- `METAVERSE_MCP_PORT`
+- `METAVERSE_MCP_HTTP_ENDPOINT`
+- `METAVERSE_MCP_HTTP_BEARER_TOKEN`
+- `METAVERSE_MCP_HTTP_DISALLOW_DELETE`
+- `METAVERSE_MCP_DIAGNOSTICS`
+- `OPENSIM_LOGIN_FIRSTNAME`
+- `OPENSIM_LOGIN_LASTNAME`
+- `OPENSIM_LOGIN_PASSWORD`
+- `OPENSIM_LOGIN_URI`
+- `OPENSIM_LOGIN_START`
+- `BOT_LOGIN_TIMEOUT_SECONDS`
+
+Default endpoint inside the stack:
+
+- `http://opensim-metaverse2mcp:8999/mcp`
+
+Bot bootstrap behavior:
+
+- `OPENSIM_CREATE_BOT_USER=true` adds a startup console command that creates the
+  bot user using `OPENSIM_LOGIN_FIRSTNAME`, `OPENSIM_LOGIN_LASTNAME`,
+  `OPENSIM_LOGIN_PASSWORD`, `OPENSIM_LOGIN_EMAIL`, and `OPENSIM_LOGIN_UUID`.
+- If `OPENSIM_LOGIN_UUID` is blank, init generates a UUID automatically.
+
 ## OpenSim MCP Server (opensim-console2mcp)
 
 This project uses the published Docker image
@@ -268,6 +311,7 @@ Defaults:
 
 - Web UI port: `4096` (`OPENCODE_WEB_PORT`)
 - MCP endpoint URL for Opencode: `http://opensim-console2mcp:9001/mcp` (`OPENCODE_MCP_URL`)
+- Metaverse MCP endpoint URL for Opencode: `http://opensim-metaverse2mcp:8999/mcp` (`OPENCODE_METAVERSE_MCP_URL`)
 - MCP auth: none by default
 
 At startup, an init container writes `opencode.json` into the shared config
@@ -282,6 +326,11 @@ Generated config content:
     "local_host_mcp": {
       "type": "remote",
       "url": "http://opensim-console2mcp:9001/mcp",
+      "enabled": true
+    },
+    "metaverse_mcp": {
+      "type": "remote",
+      "url": "http://opensim-metaverse2mcp:8999/mcp",
       "enabled": true
     }
   }

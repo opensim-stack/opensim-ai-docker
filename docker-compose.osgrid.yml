@@ -7,6 +7,12 @@ services:
       MARIADB_DATABASE: "${MARIADB_DATABASE:-${MYSQL_DATABASE:-opensim}}"
       MARIADB_USER: "${MARIADB_USER:-${MYSQL_USER:-opensim}}"
       MARIADB_PASSWORD: "${MARIADB_PASSWORD:-${MYSQL_PASSWORD:-opensimpassword}}"
+      OPENSIM_CREATE_BOT_USER: "${OPENSIM_CREATE_BOT_USER:-true}"
+      OPENSIM_LOGIN_FIRSTNAME: "${OPENSIM_LOGIN_FIRSTNAME:-Bot}"
+      OPENSIM_LOGIN_LASTNAME: "${OPENSIM_LOGIN_LASTNAME:-User}"
+      OPENSIM_LOGIN_PASSWORD: "${OPENSIM_LOGIN_PASSWORD:-botpassword}"
+      OPENSIM_LOGIN_EMAIL: "${OPENSIM_LOGIN_EMAIL:-bot@example.com}"
+      OPENSIM_LOGIN_UUID: "${OPENSIM_LOGIN_UUID:-}"
     command: >
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
@@ -84,11 +90,36 @@ services:
       opensim:
         condition: service_started
 
+  opensim-metaverse2mcp:
+    image: "${OPENSIM_METAVERSE2MCP_IMAGE:-bithatch/opensim-metaverse2mcp:latest}"
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      MCP_TRANSPORT: "${METAVERSE_MCP_TRANSPORT:-http}"
+      MCP_HOST: "${METAVERSE_MCP_HOST:-0.0.0.0}"
+      MCP_PORT: "${METAVERSE_MCP_PORT:-8999}"
+      MCP_HTTP_ENDPOINT: "${METAVERSE_MCP_HTTP_ENDPOINT:-/mcp}"
+      MCP_HTTP_BEARER_TOKEN: "${METAVERSE_MCP_HTTP_BEARER_TOKEN:-}"
+      MCP_HTTP_DISALLOW_DELETE: "${METAVERSE_MCP_HTTP_DISALLOW_DELETE:-false}"
+      MCP_DIAGNOSTICS: "${METAVERSE_MCP_DIAGNOSTICS:-false}"
+      OPENSIM_LOGIN_FIRSTNAME: "${OPENSIM_LOGIN_FIRSTNAME:-Bot}"
+      OPENSIM_LOGIN_LASTNAME: "${OPENSIM_LOGIN_LASTNAME:-User}"
+      OPENSIM_LOGIN_PASSWORD: "${OPENSIM_LOGIN_PASSWORD:-botpassword}"
+      OPENSIM_LOGIN_URI: "${OPENSIM_LOGIN_URI:-http://opensim:9000}"
+      OPENSIM_LOGIN_START: "${OPENSIM_LOGIN_START:-last}"
+      BOT_LOGIN_TIMEOUT_SECONDS: "${BOT_LOGIN_TIMEOUT_SECONDS:-30}"
+    ports:
+      - "${METAVERSE_MCP_PORT:-8999}:${METAVERSE_MCP_PORT:-8999}/tcp"
+    depends_on:
+      opensim:
+        condition: service_started
+
   opencode-web-init:
     image: alpine:3.22
     restart: "no"
     environment:
       OPENCODE_MCP_URL: "${OPENCODE_MCP_URL:-http://opensim-console2mcp:9001/mcp}"
+      OPENCODE_METAVERSE_MCP_URL: "${OPENCODE_METAVERSE_MCP_URL:-http://opensim-metaverse2mcp:8999/mcp}"
     command:
       - /bin/sh
       - -ec
@@ -100,6 +131,11 @@ services:
             "local_host_mcp": {
               "type": "remote",
               "url": "${OPENCODE_MCP_URL:-http://opensim-console2mcp:9001/mcp}",
+              "enabled": true
+            },
+            "metaverse_mcp": {
+              "type": "remote",
+              "url": "${OPENCODE_METAVERSE_MCP_URL:-http://opensim-metaverse2mcp:8999/mcp}",
               "enabled": true
             }
           }
@@ -124,6 +160,8 @@ services:
       opencode-web-init:
         condition: service_completed_successfully
       opensim-console2mcp:
+        condition: service_started
+      opensim-metaverse2mcp:
         condition: service_started
 
 volumes:

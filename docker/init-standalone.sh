@@ -25,6 +25,12 @@ MARIADB_HOST="${MARIADB_HOST:-mariadb}"
 MARIADB_DATABASE="${MARIADB_DATABASE:-opensim}"
 MARIADB_USER="${MARIADB_USER:-opensim}"
 MARIADB_PASSWORD="${MARIADB_PASSWORD:-opensimpassword}"
+OPENSIM_CREATE_BOT_USER="${OPENSIM_CREATE_BOT_USER:-true}"
+OPENSIM_LOGIN_FIRSTNAME="${OPENSIM_LOGIN_FIRSTNAME:-Bot}"
+OPENSIM_LOGIN_LASTNAME="${OPENSIM_LOGIN_LASTNAME:-User}"
+OPENSIM_LOGIN_PASSWORD="${OPENSIM_LOGIN_PASSWORD:-botpassword}"
+OPENSIM_LOGIN_EMAIL="${OPENSIM_LOGIN_EMAIL:-bot@example.com}"
+OPENSIM_LOGIN_UUID="${OPENSIM_LOGIN_UUID:-}"
 
 OPENSIM_REGION_NAME_SAFE="$(printf '%s' "${OPENSIM_REGION_NAME}" | tr ' ' '_' | tr -cd 'A-Za-z0-9_-')"
 
@@ -34,7 +40,9 @@ export OPENSIM_HOSTNAME OPENSIM_REGION_NAME OPENSIM_REGION_X OPENSIM_REGION_Y \
     OPENSIM_ESTATE_OWNER_EMAIL OPENSIM_ESTATE_OWNER_UUID OPENSIM_GRID_NAME \
     OPENSIM_GRID_NICK OPENSIM_WELCOME_MESSAGE OPENSIM_REGION_NAME_SAFE \
     OPENSIM_CONSOLE_MODE OPENSIM_CONSOLE_USER OPENSIM_CONSOLE_PASS \
-    MARIADB_HOST MARIADB_DATABASE MARIADB_USER MARIADB_PASSWORD
+    MARIADB_HOST MARIADB_DATABASE MARIADB_USER MARIADB_PASSWORD \
+    OPENSIM_CREATE_BOT_USER OPENSIM_LOGIN_FIRSTNAME OPENSIM_LOGIN_LASTNAME \
+    OPENSIM_LOGIN_PASSWORD OPENSIM_LOGIN_EMAIL OPENSIM_LOGIN_UUID
 
 printf '[init] Waiting for MariaDB at %s...\n' "${MARIADB_HOST}"
 attempts=0
@@ -66,6 +74,28 @@ if [ ! -f "${CONFIG_DIR}/Regions/Region.ini" ]; then
 
     envsubst '${OPENSIM_REGION_NAME}${OPENSIM_REGION_UUID}${OPENSIM_REGION_X}${OPENSIM_REGION_Y}${OPENSIM_REGION_PORT}${OPENSIM_HOSTNAME}' \
         < "${TEMPLATES_DIR}/Region.ini" > "${CONFIG_DIR}/Regions/Region.ini"
+fi
+
+STARTUP_FILE="${CONFIG_DIR}/startup_commands.txt"
+if [ "$(printf '%s' "${OPENSIM_CREATE_BOT_USER}" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
+    if [ -z "${OPENSIM_LOGIN_UUID}" ]; then
+        if [ -r /proc/sys/kernel/random/uuid ]; then
+            OPENSIM_LOGIN_UUID="$(cat /proc/sys/kernel/random/uuid)"
+        else
+            OPENSIM_LOGIN_UUID="$(uuidgen | tr '[:upper:]' '[:lower:]')"
+        fi
+    fi
+
+    touch "${STARTUP_FILE}"
+    if ! grep -Fq "# opensim-ai-docker bot bootstrap" "${STARTUP_FILE}" 2>/dev/null; then
+        {
+            printf '\n# opensim-ai-docker bot bootstrap\n'
+            printf 'create user "%s" "%s" "%s" "%s" "%s"\n' \
+                "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}" \
+                "${OPENSIM_LOGIN_PASSWORD}" "${OPENSIM_LOGIN_EMAIL}" "${OPENSIM_LOGIN_UUID}"
+        } >> "${STARTUP_FILE}"
+        printf '[init] Added startup command to create bot user %s %s.\n' "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}"
+    fi
 fi
 
 printf '[init] Standalone config generation complete.\n'
