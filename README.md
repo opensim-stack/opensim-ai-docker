@@ -1,5 +1,8 @@
 # OpenSimulator / OS Grid Docker Stack with AI Experiments
 
+[![Docker Hub Standalone](https://img.shields.io/badge/Docker%20Hub-bithatch%2Fopensim--ai--standalone-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/repository/docker/bithatch/opensim-ai-standalone/general)
+[![Docker Hub OSGrid](https://img.shields.io/badge/Docker%20Hub-bithatch%2Fopensim--ai--osgrid-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/repository/docker/bithatch/opensim-ai-osgrid/general)
+
 A Docker stack for OpenSimulator and OS Grid that makes it easy to setup an AI enabled virtual world.
 
 This is done by integrating [opensim-console2mcp](https://github.com/opensim-stack/opensim-console2mcp),  [opensim-metaverese2mcp](https://github.com/opensim-stack/opensim-metaverse2mcp) and [opencode](https://opencode.ai/) as part of the stack. `opensim-console2mcp` bridges the OpenSimulator REST console to MCP, `opensim-metaverse2mcp` provides a bridge to a bot controlled by MCP and `opencode-web` talks to those MCP bridges.
