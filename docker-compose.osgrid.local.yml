@@ -19,3 +19,13 @@ services:
     build:
       context: ../opensim-opencode
     image: "${OPENCODE_IMAGE:-opensim-opencode:latest}"
+
+  opensim-console2mcp:
+    build:
+      context: ../opensim-console2mcp
+    image: "${OPENSIM_CONSOLE2MCP_IMAGE:-opensim-console2mcp:latest}"
+
+  opensim-metaverse2mcp:
+    build:
+      context: ../opensim-metaverse2mcp
+    image: "${OPENSIM_METAVERSE2MCP_IMAGE:-opensim-metaverse2mcp:latest}"

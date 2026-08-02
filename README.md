@@ -29,6 +29,16 @@ This is done by integrating [opensim-console2mcp](https://github.com/opensim-sta
  ```
  Place a cube prim 2 meters away and scale it x2. 
  ```
+ 
+ Anything more complex than that, you are probably going to want to choose a different model and/or provider. For example, to hook up to Github Copilot and use GPT-5.3 Codex, tell the bot ..
+ 
+ 1. `*auth methods github-copilot`
+ 2. `*auth github-copilot oauth 0`
+ 3. Complete browser/device step
+ 4. `*auth github-copilot oauth-complete 0`
+ 5. `*configure github-copilot/gpt-5.3-codex`
+ 
+ For information on other providers and *star commands*, see [opensim-metaverse2mcp/README.md](https://github.com/opensim-stack/opensim-metaverse2mcp). 
 
 ## Build Types
 
@@ -450,6 +460,9 @@ Those override files add `build:` sections and keep current local image tags:
 - source: `opensim-ai-standalone:dev`
 - release: `opensim-ai-standalone:latest`
 - osgrid: `opensim-ai-osgrid:latest`
+- console MCP: `opensim-console2mcp:latest`
+- metaverse MCP: `opensim-metaverse2mcp:latest`
+- opencode: `opensim-opencode:latest`
 
 If you need to override published images manually, set one or more of:
 

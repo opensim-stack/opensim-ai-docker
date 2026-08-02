@@ -95,7 +95,6 @@ services:
 
   opensim-metaverse2mcp:
     image: "${OPENSIM_METAVERSE2MCP_IMAGE:-bithatch/opensim-metaverse2mcp:latest}"
-    pull_policy: missing
     restart: unless-stopped
     pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
     environment:
