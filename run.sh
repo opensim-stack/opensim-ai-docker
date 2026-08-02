@@ -10,7 +10,7 @@ if [ ! -f .env ]; then
     echo "Created .env. Review it before re-running if needed."
 fi
 
-export OPENSIM_SOURCE_IMAGE="${OPENSIM_SOURCE_IMAGE:-opensim-ai-standalone:dev}"
+export OPENSIM_SOURCE_IMAGE="${OPENSIM_SOURCE_IMAGE:-opensim-ai-standalone:dev-latest}"
 
 exec docker compose \
   -f docker-compose.yml \

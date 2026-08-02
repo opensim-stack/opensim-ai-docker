@@ -330,7 +330,7 @@ This stack includes an Opencode server service using
 
 Defaults:
 
-- Server port: `8998` (`OPENCODE_PORT`, fallback `OPENCODE_WEB_PORT` for compatibility)
+- Server port: `8998` (`OPENCODE_PORT`)
 - MCP endpoint URL for Opencode: `http://opensim-console2mcp:9001/mcp` (`OPENCODE_MCP_URL`)
 - Metaverse MCP endpoint URL for Opencode: `http://opensim-metaverse2mcp:8999/mcp` (`OPENCODE_METAVERSE_MCP_URL`)
 - MCP auth: none by default
