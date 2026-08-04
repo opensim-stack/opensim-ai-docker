@@ -272,6 +272,14 @@ This project also runs a bot-side MCP service using
 The service logs in a bot avatar and exposes in-world tools (movement, prim and
 environment actions) over MCP HTTP.
 
+Mount layout used by the stack:
+
+- Shared generated config is mounted at `/workspace` (not `/config`).
+- Region files are mounted via a dedicated regions volume:
+  - OpenSim runtime: `/opt/opensim/bin/Regions`
+  - Init container generation target: `/regions`
+  - Opencode sidecar visibility: `/regions`
+
 The metaverse MCP sidecar uses these environment variables:
 
 - `OPENSIM_METAVERSE2MCP_IMAGE`
@@ -378,8 +386,10 @@ Volume mappings used by the service:
 
 - Source/release stacks:
   - `opensim-config` -> `/workspace`
+  - `opensim-regions` -> `/regions`
 - OSGrid stack:
   - `osgrid-config` -> `/workspace`
+  - `osgrid-regions` -> `/regions`
 - All stacks:
   - `opencode-data` -> `/root/.local/share/opencode`
   - `opencode-state` -> `/root/.local/state/opencode`

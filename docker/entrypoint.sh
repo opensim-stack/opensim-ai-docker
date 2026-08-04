@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-CONFIG_DIR="${CONFIG_DIR:-/config}"
+CONFIG_DIR="${CONFIG_DIR:-/workspace}"
 BIN_DIR="/opt/opensim/bin"
 
 printf '[opensim] Installing config files from %s ...\n' "${CONFIG_DIR}"
@@ -15,7 +15,7 @@ if [ -f "${CONFIG_DIR}/config-include/StandaloneCommon.ini" ]; then
     cp -f "${CONFIG_DIR}/config-include/StandaloneCommon.ini" "${BIN_DIR}/config-include/StandaloneCommon.ini"
 fi
 
-if [ -f "${CONFIG_DIR}/Regions/Region.ini" ]; then
+if [ ! -f "${BIN_DIR}/Regions/Region.ini" ] && [ -f "${CONFIG_DIR}/Regions/Region.ini" ]; then
     mkdir -p "${BIN_DIR}/Regions"
     cp -f "${CONFIG_DIR}/Regions/Region.ini" "${BIN_DIR}/Regions/Region.ini"
 fi

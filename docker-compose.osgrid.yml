@@ -25,6 +25,8 @@ services:
     restart: "no"
     pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
     environment:
+      CONFIG_DIR: /workspace
+      REGIONS_DIR: /regions
       OSGRID_REGION_NAME: "${OSGRID_REGION_NAME}"
       OSGRID_REGION_UUID: "${OSGRID_REGION_UUID}"
       OSGRID_REGION_LOCATION: "${OSGRID_REGION_LOCATION}"
@@ -54,7 +56,8 @@ services:
       MARIADB_USER: "${MARIADB_USER:-${MYSQL_USER:-opensim}}"
       MARIADB_PASSWORD: "${MARIADB_PASSWORD:-${MYSQL_PASSWORD:-opensimpassword}}"
     volumes:
-      - osgrid-config:/config
+      - osgrid-config:/workspace
+      - osgrid-regions:/regions
     depends_on:
       mariadb:
         condition: service_healthy
@@ -64,9 +67,10 @@ services:
     restart: unless-stopped
     pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
     environment:
-      CONFIG_DIR: /config
+      CONFIG_DIR: /workspace
     volumes:
-      - osgrid-config:/config
+      - osgrid-config:/workspace
+      - osgrid-regions:/opt/opensim/bin/Regions
       - osgrid-assetcache:/opt/opensim/bin/assetcache
       - osgrid-maptiles:/opt/opensim/bin/maptiles
     ports:
@@ -137,7 +141,7 @@ services:
       - /bin/sh
       - -ec
       - |
-        cat > /config/opencode.json <<'EOF'
+        cat > /workspace/opencode.json <<'EOF'
         {
           "$$schema": "https://opencode.ai/config.json",
           "mcp": {
@@ -155,7 +159,7 @@ services:
         }
         EOF
     volumes:
-      - osgrid-config:/config
+      - osgrid-config:/workspace
 
   opensim-opencode:
     image: "${OPENCODE_IMAGE:-bithatch/opensim-opencode:latest}"
@@ -171,6 +175,7 @@ services:
       - "${OPENCODE_PORT:-8998}:8998/tcp"
     volumes:
       - osgrid-config:/workspace
+      - osgrid-regions:/regions
       - opencode-config:/root/.config/opencode
       - opencode-data:/root/.local/share/opencode
       - opencode-state:/root/.local/state/opencode
@@ -186,6 +191,7 @@ services:
 volumes:
   osgrid-mariadb:
   osgrid-config:
+  osgrid-regions:
   osgrid-assetcache:
   osgrid-maptiles:
   opencode-data:

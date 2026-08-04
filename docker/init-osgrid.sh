@@ -1,7 +1,8 @@
 #!/bin/sh
 set -eu
 
-CONFIG_DIR="${CONFIG_DIR:-/config}"
+CONFIG_DIR="${CONFIG_DIR:-/workspace}"
+REGIONS_DIR="${REGIONS_DIR:-${CONFIG_DIR}/Regions}"
 TEMPLATES_DIR="/opt/opensim/docker/templates/osgrid"
 
 # Required minimum details to join Hypergrid via OSGrid package
@@ -61,7 +62,7 @@ printf '[init-osgrid] MariaDB is ready.\n'
 
 export OSGRID_REGION_NAME OSGRID_REGION_UUID OSGRID_REGION_LOCATION OSGRID_EXTERNAL_HOSTNAME OSGRID_INTERNAL_PORT
 
-mkdir -p "${CONFIG_DIR}/Regions" "${CONFIG_DIR}/config-include"
+mkdir -p "${REGIONS_DIR}" "${CONFIG_DIR}/config-include"
 
 envsubst '${OSGRID_EXTERNAL_HOSTNAME}${OSGRID_INTERNAL_PORT}${OPENSIM_ESTATE_NAME}${OPENSIM_ESTATE_OWNER_FIRST}${OPENSIM_ESTATE_OWNER_LAST}${OPENSIM_ESTATE_OWNER_PASSWORD}${OPENSIM_ESTATE_OWNER_EMAIL}${OPENSIM_ESTATE_OWNER_UUID}${OPENSIM_CONSOLE_MODE}${OPENSIM_CONSOLE_USER}${OPENSIM_CONSOLE_PASS}' \
     < "${TEMPLATES_DIR}/OpenSim.ini" > "${CONFIG_DIR}/OpenSim.ini"
@@ -70,7 +71,7 @@ envsubst '${MARIADB_HOST}${MARIADB_DATABASE}${MARIADB_USER}${MARIADB_PASSWORD}${
     < "${TEMPLATES_DIR}/StandaloneCommon.ini" > "${CONFIG_DIR}/config-include/StandaloneCommon.ini"
 
 envsubst '${OSGRID_REGION_NAME}${OSGRID_REGION_UUID}${OSGRID_REGION_LOCATION}${OSGRID_EXTERNAL_HOSTNAME}${OSGRID_INTERNAL_PORT}' \
-    < "${TEMPLATES_DIR}/Region.ini" > "${CONFIG_DIR}/Regions/Region.ini"
+    < "${TEMPLATES_DIR}/Region.ini" > "${REGIONS_DIR}/Region.ini"
 
 STARTUP_FILE="${CONFIG_DIR}/startup_commands.txt"
 if [ "$(printf '%s' "${OPENSIM_CREATE_BOT_USER}" | tr '[:upper:]' '[:lower:]')" = "true" ]; then

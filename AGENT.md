@@ -11,4 +11,4 @@
 Primarily console2mcp tools.
 
  * When creating users, all user fields must be filled out. If any field is left blank, the console will prompt for missing values (First name, Last name, Password, Email, UUID, Model). Model is the user to copy from, e.g. "Ruth". A unique UUID field  shouldmust be generated as the final argument. Always validate the user has been created. 
- * Creating new regions will require editing Regions.ini. You must generate a UUID . You may need to restart the region after creation. Just restart on its own restarts all sims as a last resort. Before doing anything region specific, you may need to "change region <region>". 
+ * Creating new regions will require creating a "Regions.ini. You must generate a UUID . You may need to restart the region after creation. Before doing anything region specific, you may need to "change region <region>". 
