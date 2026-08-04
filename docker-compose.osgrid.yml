@@ -192,7 +192,7 @@ services:
 
 volumes:
   osgrid-mariadb:
-  osgrid-config:
+  osgrid-workspace:
   osgrid-regions:
   osgrid-assetcache:
   osgrid-maptiles:
