@@ -193,6 +193,7 @@ services:
 volumes:
   opensim-mariadb:
   opensim-workspace:
+  opensim-templates:
   opensim-regions:
   opensim-assetcache:
   opensim-maptiles:

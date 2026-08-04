@@ -192,6 +192,7 @@ services:
 
 volumes:
   osgrid-mariadb:
+  opensim-templates:
   osgrid-workspace:
   osgrid-regions:
   osgrid-assetcache:
