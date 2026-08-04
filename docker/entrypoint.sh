@@ -1,8 +1,11 @@
 #!/bin/sh
 set -eu
 
-CONFIG_DIR="${CONFIG_DIR:-/workspace}"
+WORKSPACE_DIR="${WORKSPACE_DIR:-/workspace}"
+CONFIG_DIR="${CONFIG_DIR:-/templates}"
 BIN_DIR="/opt/opensim/bin"
+
+mkdir -p "${WORKSPACE_DIR}"
 
 printf '[opensim] Installing config files from %s ...\n' "${CONFIG_DIR}"
 

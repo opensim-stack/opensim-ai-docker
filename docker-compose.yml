@@ -25,7 +25,8 @@ services:
     restart: "no"
     pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
     environment:
-      CONFIG_DIR: /workspace
+      CONFIG_DIR: /templates
+      WORKSPACE_DIR: /workspace
       REGIONS_DIR: /regions
       OPENSIM_HOSTNAME: "${OPENSIM_HOSTNAME:-127.0.0.1}"
       OPENSIM_REGION_NAME: "${OPENSIM_REGION_NAME:-Welcome Island}"
@@ -56,7 +57,7 @@ services:
       MARIADB_USER: "${MARIADB_USER:-${MYSQL_USER:-opensim}}"
       MARIADB_PASSWORD: "${MARIADB_PASSWORD:-${MYSQL_PASSWORD:-opensimpassword}}"
     volumes:
-      - opensim-config:/workspace
+      - opensim-workspace:/workspace
       - opensim-regions:/regions
     depends_on:
       mariadb:
@@ -67,9 +68,10 @@ services:
     restart: unless-stopped
     pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
     environment:
-      CONFIG_DIR: /workspace
+      WORKSPACE_DIR: /workspace
+      CONFIG_DIR: /templates
     volumes:
-      - opensim-config:/workspace
+      - opensim-workspace:/workspace
       - opensim-regions:/opt/opensim/bin/Regions
       - opensim-assetcache:/opt/opensim/bin/assetcache
       - opensim-maptiles:/opt/opensim/bin/maptiles
@@ -159,7 +161,7 @@ services:
         }
         EOF
     volumes:
-      - opensim-config:/workspace
+      - opensim-workspace:/workspace
 
   opensim-opencode:
     image: "${OPENCODE_IMAGE:-bithatch/opensim-opencode:latest}"
@@ -174,7 +176,7 @@ services:
     ports:
       - "${OPENCODE_PORT:-8998}:8998/tcp"
     volumes:
-      - opensim-config:/workspace
+      - opensim-workspace:/workspace
       - opensim-regions:/regions
       - opencode-config:/root/.config/opencode
       - opencode-data:/root/.local/share/opencode

@@ -1,7 +1,8 @@
 #!/bin/sh
 set -eu
 
-CONFIG_DIR="${CONFIG_DIR:-/workspace}"
+WORKSPACE_DIR="${CONFIG_DIR:-/workspace}"
+CONFIG_DIR="${CONFIG_DIR:-/templates}"
 REGIONS_DIR="${REGIONS_DIR:-${CONFIG_DIR}/Regions}"
 TEMPLATES_DIR="/opt/opensim/docker/templates"
 
@@ -58,7 +59,7 @@ until mariadb-admin ping -h "${MARIADB_HOST}" -u "${MARIADB_USER}" "--password=$
 done
 printf '[init] MariaDB is ready.\n'
 
-mkdir -p "${CONFIG_DIR}/config-include" "${REGIONS_DIR}"
+mkdir -p "${WORKSPACE_DIR}" ${CONFIG_DIR}/config-include" "${REGIONS_DIR}"
 
 envsubst '${OPENSIM_HOSTNAME}${OPENSIM_ESTATE_NAME}${OPENSIM_ESTATE_OWNER_FIRST}${OPENSIM_ESTATE_OWNER_LAST}${OPENSIM_ESTATE_OWNER_PASSWORD}${OPENSIM_ESTATE_OWNER_EMAIL}${OPENSIM_ESTATE_OWNER_UUID}${OPENSIM_CONSOLE_MODE}${OPENSIM_CONSOLE_USER}${OPENSIM_CONSOLE_PASS}' \
     < "${TEMPLATES_DIR}/OpenSim.ini" > "${CONFIG_DIR}/OpenSim.ini"

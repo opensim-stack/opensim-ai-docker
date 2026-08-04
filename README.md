@@ -21,7 +21,7 @@ This is done by integrating [opensim-console2mcp](https://github.com/opensim-sta
 
 ## Quick Start
 
- 1. Install the entire Opensim AI stack using Docker Compose. I recommend starting with [docker-compose.release.yml](docker-compose.release.yml). Use [.env.example](.env.example) for the basis of your environment variables. Hopefully your Docker front end will just let you copy the  whole lot in one go! ([Arcane](https://getarcane.app/) does).
+ 1. Install the entire Opensim AI stack using Docker Compose. I recommend starting with [docker-compose.release.yml](docker-compose.release.yml). Use [.env.example](.env.example) for the basis of your environment variables. Hopefully your Docker front end will just let you copy the  whole lot in one go! ([Arcane](https://getarcane.app/) does). However, you **MUST** set at least `OPENSIM_HOSTNAME` or it will not work on anything other than `localhost``.
  2. Configure the AI provider and model. [TODO - AI configuration](ai-configuration)
  2. Get yourself an Opensimulator viewer, I recommend [Firestorm](https://www.firestormviewer.org/). Connect to your new personal Grid using `Admin User` and `changeme` (assuming you haven't changed `OPENSIM_ESTATE_OWNER_FIRST`, `OPENSIM_ESTATE_OWNER_FIRST` or `OPENSIM_ESTATE_OWNER_PASSWORD`).
  3. When you login, you will see `Bot User` standing near you. Start an IM conversation with them, and give them an instruction, e.g. 
@@ -274,7 +274,7 @@ environment actions) over MCP HTTP.
 
 Mount layout used by the stack:
 
-- Shared generated config is mounted at `/workspace` (not `/config`).
+- Shared generated config is mounted at `/templates`.
 - Region files are mounted via a dedicated regions volume:
   - OpenSim runtime: `/opt/opensim/bin/Regions`
   - Init container generation target: `/regions`
@@ -385,10 +385,10 @@ Generated config content:
 Volume mappings used by the service:
 
 - Source/release stacks:
-  - `opensim-config` -> `/workspace`
+  - `opensim-workspace` -> `/workspace`
   - `opensim-regions` -> `/regions`
 - OSGrid stack:
-  - `osgrid-config` -> `/workspace`
+  - `osgrid-workspace` -> `/workspace`
   - `osgrid-regions` -> `/regions`
 - All stacks:
   - `opencode-data` -> `/root/.local/share/opencode`
