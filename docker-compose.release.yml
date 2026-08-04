@@ -57,6 +57,7 @@ services:
       MARIADB_USER: "${MARIADB_USER:-${MYSQL_USER:-opensim}}"
       MARIADB_PASSWORD: "${MARIADB_PASSWORD:-${MYSQL_PASSWORD:-opensimpassword}}"
     volumes:
+      - opensim-templates:/templates
       - opensim-workspace:/workspace
       - opensim-regions:/regions
     depends_on:
@@ -71,6 +72,7 @@ services:
       CONFIG_DIR: /templates
       WORKSPACE_DIR: /workspace
     volumes:
+      - opensim-templates:/templates
       - opensim-workspace:/workspace
       - opensim-regions:/opt/opensim/bin/Regions
       - opensim-assetcache:/opt/opensim/bin/assetcache
