@@ -305,6 +305,10 @@ The metaverse MCP sidecar uses these environment variables:
 - `OPENCODE_REQUEST_TIMEOUT_SECONDS`
 - `OPENCODE_HANDLER_FIRSTNAME` (optional; defaults to `OPENSIM_ESTATE_OWNER_FIRST`)
 - `OPENCODE_HANDLER_LASTNAME` (optional; defaults to `OPENSIM_ESTATE_OWNER_LAST`)
+- `PROMPT_HANDLING_ENABLED`
+- `PROMPT_PROJECT_AGENTS_ENABLED`
+- `PROMPT_PROJECT_AGENTS_FILE` (default in this stack: `/app/AGENTS.md`)
+- `PROMPT_NOTECARD_REQUIRE_HANDLER`
 
 Default endpoint inside the stack:
 
@@ -319,6 +323,12 @@ Bot bootstrap behavior:
 - If `OPENSIM_LOGIN_UUID` is blank, init generates a UUID automatically.
 - Set `OPENSIM_LOGIN_MODEL` to `""` if you want an empty model/avatar template.
 - Handler behavior: by default, the metaverse bot only accepts IM instructions from the estate owner name (`OPENSIM_ESTATE_OWNER_FIRST` + `OPENSIM_ESTATE_OWNER_LAST`) unless you override `OPENCODE_HANDLER_FIRSTNAME` / `OPENCODE_HANDLER_LASTNAME`.
+
+Prompt bootstrap behavior:
+
+- This repository ships a stack-level `AGENTS.md` prompt file at project root.
+- Compose mounts that file into `opensim-metaverse2mcp` at `/app/AGENTS.md` and sets `PROMPT_PROJECT_AGENTS_FILE=/app/AGENTS.md` by default.
+- You can edit `AGENTS.md` to tune assistant behavior without rebuilding images.
 
 ## OpenSim MCP Server (opensim-console2mcp)
 
