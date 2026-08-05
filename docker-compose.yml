@@ -25,9 +25,6 @@ services:
     restart: "no"
     pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
     environment:
-      CONFIG_DIR: /templates
-      WORKSPACE_DIR: /workspace
-      REGIONS_DIR: /regions
       OPENSIM_HOSTNAME: "${OPENSIM_HOSTNAME:-127.0.0.1}"
       OPENSIM_REGION_NAME: "${OPENSIM_REGION_NAME:-Welcome Island}"
       OPENSIM_REGION_X: "${OPENSIM_REGION_X:-1000}"
@@ -58,7 +55,7 @@ services:
       MARIADB_PASSWORD: "${MARIADB_PASSWORD:-${MYSQL_PASSWORD:-opensimpassword}}"
     volumes:
       - opensim-workspace:/workspace
-      - opensim-regions:/regions
+      - opensim-regions:/opt/opensim/bin/Regions
     depends_on:
       mariadb:
         condition: service_healthy
@@ -67,9 +64,6 @@ services:
     image: "${OPENSIM_SOURCE_IMAGE:-bithatch/opensim-ai-standalone:dev-latest}"
     restart: unless-stopped
     pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
-    environment:
-      WORKSPACE_DIR: /workspace
-      CONFIG_DIR: /templates
     volumes:
       - opensim-workspace:/workspace
       - opensim-regions:/opt/opensim/bin/Regions

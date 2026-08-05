@@ -2,9 +2,10 @@
 set -eu
 
 WORKSPACE_DIR="${WORKSPACE_DIR:-/workspace}"
-CONFIG_DIR="${CONFIG_DIR:-/templates}"
-REGIONS_DIR="${REGIONS_DIR:-${CONFIG_DIR}/Regions}"
-TEMPLATES_DIR="/opt/opensim/docker/templates/osgrid"
+OPENSIM_DIR="${OPENSIM_DIR:-/opt/opensim}"
+TEMPLATES_DIR="${TEMPLATES_DIR:-${OPENSIM_DIR}/docker/templates}"
+BIN_DIR="${BIN_DIR:-${OPENSIM_DIR}/bin}"
+REGIONS_DIR="${REGIONS_DIR:-${BIN_DIR}/Regions}"
 
 # Required minimum details to join Hypergrid via OSGrid package
 : "${OSGRID_REGION_NAME:?OSGRID_REGION_NAME is required}"
@@ -63,18 +64,18 @@ printf '[init-osgrid] MariaDB is ready.\n'
 
 export OSGRID_REGION_NAME OSGRID_REGION_UUID OSGRID_REGION_LOCATION OSGRID_EXTERNAL_HOSTNAME OSGRID_INTERNAL_PORT
 
-mkdir -p "${WORKSPACE_DIR}" "${REGIONS_DIR}" "${CONFIG_DIR}/config-include"
+mkdir -p "${WORKSPACE_DIR}" "${REGIONS_DIR}" "${BIN_DIR}/config-include"
 
 envsubst '${OSGRID_EXTERNAL_HOSTNAME}${OSGRID_INTERNAL_PORT}${OPENSIM_ESTATE_NAME}${OPENSIM_ESTATE_OWNER_FIRST}${OPENSIM_ESTATE_OWNER_LAST}${OPENSIM_ESTATE_OWNER_PASSWORD}${OPENSIM_ESTATE_OWNER_EMAIL}${OPENSIM_ESTATE_OWNER_UUID}${OPENSIM_CONSOLE_MODE}${OPENSIM_CONSOLE_USER}${OPENSIM_CONSOLE_PASS}' \
-    < "${TEMPLATES_DIR}/OpenSim.ini" > "${CONFIG_DIR}/OpenSim.ini"
+    < "${TEMPLATES_DIR}/OpenSim.ini" > "${BIN_DIR}/OpenSim.ini"
 
 envsubst '${MARIADB_HOST}${MARIADB_DATABASE}${MARIADB_USER}${MARIADB_PASSWORD}${OSGRID_REGION_NAME_SAFE}${OPENSIM_WELCOME_MESSAGE}${OPENSIM_GRID_NAME}${OPENSIM_GRID_NICK}' \
-    < "${TEMPLATES_DIR}/StandaloneCommon.ini" > "${CONFIG_DIR}/config-include/StandaloneCommon.ini"
+    < "${TEMPLATES_DIR}/StandaloneCommon.ini" > "${BIN_DIR}/config-include/StandaloneCommon.ini"
 
 envsubst '${OSGRID_REGION_NAME}${OSGRID_REGION_UUID}${OSGRID_REGION_LOCATION}${OSGRID_EXTERNAL_HOSTNAME}${OSGRID_INTERNAL_PORT}' \
     < "${TEMPLATES_DIR}/Region.ini" > "${REGIONS_DIR}/Region.ini"
 
-STARTUP_FILE="${CONFIG_DIR}/startup_commands.txt"
+STARTUP_FILE="${BIN_DIR}/startup_commands.txt"
 if [ "$(printf '%s' "${OPENSIM_CREATE_BOT_USER}" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
     if [ -z "${OPENSIM_LOGIN_UUID}" ]; then
         if [ -r /proc/sys/kernel/random/uuid ]; then

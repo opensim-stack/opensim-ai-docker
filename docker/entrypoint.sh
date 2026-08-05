@@ -2,33 +2,34 @@
 set -eu
 
 WORKSPACE_DIR="${WORKSPACE_DIR:-/workspace}"
-CONFIG_DIR="${CONFIG_DIR:-/templates}"
-BIN_DIR="/opt/opensim/bin"
+OPENSIM_DIR="${OPENSIM_DIR:-/opt/opensim}"
+TEMPLATES_DIR="${TEMPLATES_DIR:-${OPENSIM_DIR}/docker/templates}"
+BIN_DIR="${BIN_DIR:-${OPENSIM_DIR}/bin}"
 
 mkdir -p "${WORKSPACE_DIR}"
 
-printf '[opensim] Installing config files from %s ...\n' "${CONFIG_DIR}"
+printf '[opensim] Installing config files from %s ...\n' "${TEMPLATES_DIR}"
 
-if [ -f "${CONFIG_DIR}/OpenSim.ini" ]; then
-    cp -f "${CONFIG_DIR}/OpenSim.ini" "${BIN_DIR}/OpenSim.ini"
+if [ -f "${TEMPLATES_DIR}/OpenSim.ini" ]; then
+    cp -f "${TEMPLATES_DIR}/OpenSim.ini" "${BIN_DIR}/OpenSim.ini"
 fi
 
-if [ -f "${CONFIG_DIR}/config-include/StandaloneCommon.ini" ]; then
+if [ -f "${TEMPLATES_DIR}/config-include/StandaloneCommon.ini" ]; then
     mkdir -p "${BIN_DIR}/config-include"
-    cp -f "${CONFIG_DIR}/config-include/StandaloneCommon.ini" "${BIN_DIR}/config-include/StandaloneCommon.ini"
+    cp -f "${TEMPLATES_DIR}/config-include/StandaloneCommon.ini" "${BIN_DIR}/config-include/StandaloneCommon.ini"
 fi
 
-if [ ! -f "${BIN_DIR}/Regions/Region.ini" ] && [ -f "${CONFIG_DIR}/Regions/Region.ini" ]; then
+if [ ! -f "${BIN_DIR}/Regions/Region.ini" ] && [ -f "${TEMPLATES_DIR}/Regions/Region.ini" ]; then
     mkdir -p "${BIN_DIR}/Regions"
-    cp -f "${CONFIG_DIR}/Regions/Region.ini" "${BIN_DIR}/Regions/Region.ini"
+    cp -f "${TEMPLATES_DIR}/Regions/Region.ini" "${BIN_DIR}/Regions/Region.ini"
 fi
 
-if [ -f "${CONFIG_DIR}/startup_commands.txt" ]; then
-    cp -f "${CONFIG_DIR}/startup_commands.txt" "${BIN_DIR}/startup_commands.txt"
+if [ -f "${TEMPLATES_DIR}/startup_commands.txt" ]; then
+    cp -f "${TEMPLATES_DIR}/startup_commands.txt" "${BIN_DIR}/startup_commands.txt"
 fi
 
-if [ -f "${CONFIG_DIR}/shutdown_commands.txt" ]; then
-    cp -f "${CONFIG_DIR}/shutdown_commands.txt" "${BIN_DIR}/shutdown_commands.txt"
+if [ -f "${TEMPLATES_DIR}/shutdown_commands.txt" ]; then
+    cp -f "${TEMPLATES_DIR}/shutdown_commands.txt" "${BIN_DIR}/shutdown_commands.txt"
 fi
 
 if [ ! -f "${BIN_DIR}/config-include/FlotsamCache.ini" ] && [ -f "${BIN_DIR}/config-include/FlotsamCache.ini.example" ]; then

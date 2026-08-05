@@ -25,9 +25,6 @@ services:
     restart: "no"
     pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
     environment:
-      CONFIG_DIR: /templates
-      WORKSPACE_DIR: /workspace
-      REGIONS_DIR: /regions
       OSGRID_REGION_NAME: "${OSGRID_REGION_NAME}"
       OSGRID_REGION_UUID: "${OSGRID_REGION_UUID}"
       OSGRID_REGION_LOCATION: "${OSGRID_REGION_LOCATION}"
@@ -58,7 +55,7 @@ services:
       MARIADB_PASSWORD: "${MARIADB_PASSWORD:-${MYSQL_PASSWORD:-opensimpassword}}"
     volumes:
       - osgrid-workspace:/workspace
-      - osgrid-regions:/regions
+      - osgrid-regions:/opt/opensim/bin/Regions
     depends_on:
       mariadb:
         condition: service_healthy
@@ -67,9 +64,6 @@ services:
     image: "${OPENSIM_OSGRID_IMAGE:-bithatch/opensim-ai-osgrid:latest}"
     restart: unless-stopped
     pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
-    environment:
-      CONFIG_DIR: /templates
-      WORKSPACE_DIR: /workspace
     volumes:
       - osgrid-workspace:/workspace
       - osgrid-regions:/opt/opensim/bin/Regions

@@ -1,10 +1,12 @@
 #!/bin/sh
 set -eu
 
-WORKSPACE_DIR="${CONFIG_DIR:-/workspace}"
-CONFIG_DIR="${CONFIG_DIR:-/templates}"
-REGIONS_DIR="${REGIONS_DIR:-${CONFIG_DIR}/Regions}"
-TEMPLATES_DIR="/opt/opensim/docker/templates"
+
+WORKSPACE_DIR="${WORKSPACE_DIR:-/workspace}"
+OPENSIM_DIR="${OPENSIM_DIR:-/opt/opensim}"
+TEMPLATES_DIR="${TEMPLATES_DIR:-${OPENSIM_DIR}/docker/templates}"
+BIN_DIR="${BIN_DIR:-${OPENSIM_DIR}/bin}"
+REGIONS_DIR="${REGIONS_DIR:-${BIN_DIR}/Regions}"
 
 OPENSIM_HOSTNAME="${OPENSIM_HOSTNAME:-127.0.0.1}"
 OPENSIM_REGION_NAME="${OPENSIM_REGION_NAME:-Welcome Island}"
@@ -59,13 +61,13 @@ until mariadb-admin ping -h "${MARIADB_HOST}" -u "${MARIADB_USER}" "--password=$
 done
 printf '[init] MariaDB is ready.\n'
 
-mkdir -p "${WORKSPACE_DIR}" "${CONFIG_DIR}/config-include" "${REGIONS_DIR}"
+mkdir -p "${WORKSPACE_DIR}" "${BIN_DIR}/config-include" "${REGIONS_DIR}"
 
 envsubst '${OPENSIM_HOSTNAME}${OPENSIM_ESTATE_NAME}${OPENSIM_ESTATE_OWNER_FIRST}${OPENSIM_ESTATE_OWNER_LAST}${OPENSIM_ESTATE_OWNER_PASSWORD}${OPENSIM_ESTATE_OWNER_EMAIL}${OPENSIM_ESTATE_OWNER_UUID}${OPENSIM_CONSOLE_MODE}${OPENSIM_CONSOLE_USER}${OPENSIM_CONSOLE_PASS}' \
-    < "${TEMPLATES_DIR}/OpenSim.ini" > "${CONFIG_DIR}/OpenSim.ini"
+    < "${TEMPLATES_DIR}/OpenSim.ini" > "${BIN_DIR}/OpenSim.ini"
 
 envsubst '${MARIADB_HOST}${MARIADB_DATABASE}${MARIADB_USER}${MARIADB_PASSWORD}${OPENSIM_GRID_NAME}${OPENSIM_GRID_NICK}${OPENSIM_WELCOME_MESSAGE}${OPENSIM_REGION_NAME_SAFE}' \
-    < "${TEMPLATES_DIR}/StandaloneCommon.ini" > "${CONFIG_DIR}/config-include/StandaloneCommon.ini"
+    < "${TEMPLATES_DIR}/StandaloneCommon.ini" > "${BIN_DIR}/config-include/StandaloneCommon.ini"
 
 if [ ! -f "${REGIONS_DIR}/Region.ini" ]; then
     if [ -r /proc/sys/kernel/random/uuid ]; then
@@ -79,7 +81,7 @@ if [ ! -f "${REGIONS_DIR}/Region.ini" ]; then
         < "${TEMPLATES_DIR}/Region.ini" > "${REGIONS_DIR}/Region.ini"
 fi
 
-STARTUP_FILE="${CONFIG_DIR}/startup_commands.txt"
+STARTUP_FILE="${BIN_DIR}/startup_commands.txt"
 if [ "$(printf '%s' "${OPENSIM_CREATE_BOT_USER}" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
     if [ -z "${OPENSIM_LOGIN_UUID}" ]; then
         if [ -r /proc/sys/kernel/random/uuid ]; then
