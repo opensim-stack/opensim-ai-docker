@@ -89,12 +89,12 @@ services:
     environment:
       MCP_TRANSPORT: "${MCP_TRANSPORT:-http}"
       MCP_HOST: "${MCP_HOST:-0.0.0.0}"
-      MCP_PORT: "${MCP_PORT:-9001}"
+      MCP_PORT: "${MCP_PORT:-8997}"
       OPENSIM_CONSOLE_URL: "${OPENSIM_CONSOLE_URL:-http://opensim:9000}"
       OPENSIM_CONSOLE_USER: "${OPENSIM_CONSOLE_USER:-ConsoleUser}"
       OPENSIM_CONSOLE_PASS: "${OPENSIM_CONSOLE_PASS:-ConsolePass}"
     ports:
-      - "${MCP_PORT:-9001}:${MCP_PORT:-9001}/tcp"
+      - "${MCP_PORT:-8997}:${MCP_PORT:-8997}/tcp"
     depends_on:
       opensim:
         condition: service_started
@@ -123,7 +123,10 @@ services:
       OPENCODE_PORT: "${OPENCODE_CHAT_PORT:-${OPENCODE_PORT:-8998}}"
       OPENCODE_USERNAME: "${OPENCODE_USERNAME:-}"
       OPENCODE_PASSWORD: "${OPENCODE_PASSWORD:-${OPENCODE_SERVER_PASSWORD:-}}"
+      OPENCODE_INITIAL_PROVIDER: "${OPENCODE_INITIAL_PROVIDER:-}"
+      OPENCODE_INITIAL_MODEL: "${OPENCODE_INITIAL_MODEL:-}"
       OPENCODE_REQUEST_TIMEOUT_SECONDS: "${OPENCODE_REQUEST_TIMEOUT_SECONDS:-60}"
+      OPENCODE_EVENT_MODE: "${OPENCODE_EVENT_MODE:-off}"
       OPENCODE_HANDLER_FIRSTNAME: "${OPENCODE_HANDLER_FIRSTNAME:-${OPENSIM_ESTATE_OWNER_FIRST:-Admin}}"
       OPENCODE_HANDLER_LASTNAME: "${OPENCODE_HANDLER_LASTNAME:-${OPENSIM_ESTATE_OWNER_LAST:-User}}"
       PROMPT_HANDLING_ENABLED: "${PROMPT_HANDLING_ENABLED:-true}"
@@ -143,7 +146,7 @@ services:
     restart: "no"
     pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
     environment:
-      OPENCODE_MCP_URL: "${OPENCODE_MCP_URL:-http://opensim-console2mcp:9001/mcp}"
+      OPENCODE_MCP_URL: "${OPENCODE_MCP_URL:-http://opensim-console2mcp:8997/mcp}"
       OPENCODE_METAVERSE_MCP_URL: "${OPENCODE_METAVERSE_MCP_URL:-http://opensim-metaverse2mcp:8999/mcp}"
     command:
       - /bin/sh
@@ -155,7 +158,7 @@ services:
           "mcp": {
             "local_host_mcp": {
               "type": "remote",
-              "url": "${OPENCODE_MCP_URL:-http://opensim-console2mcp:9001/mcp}",
+              "url": "${OPENCODE_MCP_URL:-http://opensim-console2mcp:8997/mcp}",
               "enabled": true
             },
             "metaverse_mcp": {

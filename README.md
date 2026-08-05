@@ -19,6 +19,11 @@ This is done by integrating [opensim-console2mcp](https://github.com/opensim-sta
 
 *This is all very experimental! Do not let the bot lose on anything you care about! Take backups of your regions*
 
+### Temporary Limitations
+
+ * The can currently only be a single bot
+ * The bot can only exist on a single region
+
 ## Quick Start
 
  1. Install the entire Opensim AI stack using Docker Compose. I recommend starting with [docker-compose.release.yml](docker-compose.release.yml). Use [.env.example](.env.example) for the basis of your environment variables. Hopefully your Docker front end will just let you copy the  whole lot in one go! ([Arcane](https://getarcane.app/) does). However, you **MUST** set at least `OPENSIM_HOSTNAME` or it will not work on anything other than `localhost``.
@@ -302,7 +307,10 @@ The metaverse MCP sidecar uses these environment variables:
 - `OPENCODE_CHAT_PORT` (mapped to `OPENCODE_PORT` inside `opensim-metaverse2mcp`)
 - `OPENCODE_USERNAME`
 - `OPENCODE_PASSWORD` (falls back to `OPENCODE_SERVER_PASSWORD`)
+- `OPENCODE_INITIAL_PROVIDER` (optional startup default provider for IM conversations; runtime-overridable)
+- `OPENCODE_INITIAL_MODEL` (optional startup default model for IM conversations; runtime-overridable)
 - `OPENCODE_REQUEST_TIMEOUT_SECONDS`
+- `OPENCODE_EVENT_MODE` (`off`, `observe`, `active`; defaults to `off` in compose)
 - `OPENCODE_HANDLER_FIRSTNAME` (optional; defaults to `OPENSIM_ESTATE_OWNER_FIRST`)
 - `OPENCODE_HANDLER_LASTNAME` (optional; defaults to `OPENSIM_ESTATE_OWNER_LAST`)
 - `PROMPT_HANDLING_ENABLED`
@@ -362,7 +370,7 @@ This stack includes an Opencode server service using
 Defaults:
 
 - Server port: `8998` (`OPENCODE_PORT`)
-- MCP endpoint URL for Opencode: `http://opensim-console2mcp:9001/mcp` (`OPENCODE_MCP_URL`)
+- MCP endpoint URL for Opencode: `http://opensim-console2mcp:8997/mcp` (`OPENCODE_MCP_URL`)
 - Metaverse MCP endpoint URL for Opencode: `http://opensim-metaverse2mcp:8999/mcp` (`OPENCODE_METAVERSE_MCP_URL`)
 - MCP auth: none by default
 - Host bind: `0.0.0.0` (`OPENCODE_HOST`)
@@ -380,7 +388,7 @@ Generated config content:
   "mcp": {
     "local_host_mcp": {
       "type": "remote",
-      "url": "http://opensim-console2mcp:9001/mcp",
+      "url": "http://opensim-console2mcp:8997/mcp",
       "enabled": true
     },
     "metaverse_mcp": {
