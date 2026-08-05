@@ -98,33 +98,3 @@ EXPOSE 9000/tcp 9000/udp
 ENTRYPOINT ["/opt/opensim/docker/entrypoint.sh"]
 
 
-# -----------------------------
-# Runtime from OSGrid distribution
-# -----------------------------
-FROM runtime-base AS osgrid-runtime
-
-ARG OSGRID_RELEASE_URL=https://download.osgrid.org/osgrid-opensim-04172026.v0.9.3.ef8a36b.zip
-
-RUN set -eux; \
-    mkdir -p /tmp/pkg /tmp/extract /opt/opensim/bin; \
-    curl -fsSL "${OSGRID_RELEASE_URL}" -o /tmp/pkg/osgrid.pkg; \
-    case "${OSGRID_RELEASE_URL}" in \
-        *.zip) unzip -q /tmp/pkg/osgrid.pkg -d /tmp/extract ;; \
-        *.tar.gz|*.tgz) tar -xzf /tmp/pkg/osgrid.pkg -C /tmp/extract ;; \
-        *) echo "Unsupported OSGRID_RELEASE_URL archive type" >&2; exit 1 ;; \
-    esac; \
-    dll_path="$(find /tmp/extract -type f -name OpenSim.dll | head -n 1)"; \
-    if [ -z "${dll_path}" ]; then echo "OpenSim.dll not found in OSGrid archive" >&2; exit 1; fi; \
-    bin_dir="$(dirname "${dll_path}")"; \
-    cp -a "${bin_dir}/." /opt/opensim/bin/; \
-    rm -rf /tmp/pkg /tmp/extract
-
-RUN mkdir -p \
-    /opt/opensim/bin/Regions \
-    /opt/opensim/bin/config-include \
-    /opt/opensim/bin/assetcache \
-    /opt/opensim/bin/maptiles \
-    /opt/opensim/bin/crashes
-
-EXPOSE 9000/tcp 9000/udp
-ENTRYPOINT ["/opt/opensim/docker/entrypoint.sh"]

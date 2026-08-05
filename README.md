@@ -1,7 +1,6 @@
-# OpenSimulator / OS Grid Docker Stack with AI Experiments
+# OpenSimulator Docker Stack with AI Experiments
 
 [![Docker Hub Standalone](https://img.shields.io/badge/Docker%20Hub-bithatch%2Fopensim--ai--standalone-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/repository/docker/bithatch/opensim-ai-standalone/general)
-[![Docker Hub OSGrid](https://img.shields.io/badge/Docker%20Hub-bithatch%2Fopensim--ai--osgrid-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/repository/docker/bithatch/opensim-ai-osgrid/general)
 
 A Docker stack for OpenSimulator and OS Grid that makes it easy to setup an AI enabled virtual world.
 
@@ -51,7 +50,6 @@ This is done by integrating [opensim-console2mcp](https://github.com/opensim-sta
 
 1. Source mode: default to published source image; optionally build from git via local override.
 2. Release mode: default to published release image; optionally build from official binary archive.
-3. OSGrid mode: default to published OSGrid image; optionally build from OSGrid package and generate `Regions.ini`.
 
 *Note: security defaults are intentionally lax and mainly suitable for local use. All components support proper authentication, so you should replace default credentials before exposing services externally.*
 
@@ -60,13 +58,10 @@ This is done by integrating [opensim-console2mcp](https://github.com/opensim-sta
 - Dockerfile
 - docker-compose.yml (source mode default)
 - docker-compose.release.yml (official binary release override)
-- docker-compose.osgrid.yml (OSGrid override)
 - docker-compose.local.yml (local source build override)
 - docker-compose.release.local.yml (local release build override)
-- docker-compose.osgrid.local.yml (local OSGrid build override)
 - .env.example
 - docker/init-standalone.sh
-- docker/init-osgrid.sh
 - docker/entrypoint.sh
 
 ## Prerequisites
@@ -88,7 +83,6 @@ The project includes helper scripts that run the correct compose command for eac
 
 - ./run.sh
 - ./run-release.sh
-- ./run-osgrid.sh
 
 Each script will auto-create `.env` from `.env.example` if it does not exist.
 
@@ -96,7 +90,6 @@ By default, compose files use published images via these variables:
 
 - `OPENSIM_SOURCE_IMAGE` (default `bithatch/opensim-ai-standalone:dev-latest`)
 - `OPENSIM_RELEASE_IMAGE` (default `bithatch/opensim-ai-standalone:latest`)
-- `OPENSIM_OSGRID_IMAGE` (default `bithatch/opensim-ai-osgrid:latest`)
 - `OPENSIM_METAVERSE2MCP_IMAGE` (default `bithatch/opensim-metaverse2mcp:latest`)
 
 The helper scripts use local override compose files (`docker-compose.*.local.yml`) to
@@ -105,7 +98,7 @@ build and run local images with the current local tags.
 Use cases:
 
 - Use plain `docker compose ... up -d` to run published images.
-- Use `./run.sh`, `./run-release.sh`, or `./run-osgrid.sh` for local builds.
+- Use `./run.sh` or `./run-release.sh` for local builds.
 
 ## Mode 1: Source mode
 
@@ -162,49 +155,7 @@ Or use:
 ./run-release.sh
 ```
 
-## Mode 3: OSGrid-ready Hypergrid mode
 
-By default this mode pulls the published OSGrid image. Local OSGrid builds are
-done through `./run-osgrid.sh` using `docker-compose.osgrid.local.yml`.
-
-When building locally, this mode downloads the OSGrid distribution:
-
-- https://download.osgrid.org/osgrid-opensim-04172026.v0.9.3.ef8a36b.zip
-
-It includes its own MariaDB service in this compose stack.
-It creates `Regions/Region.ini` with the minimum required details for joining Hypergrid.
-
-Required variables in `.env` for this mode:
-
-- OSGRID_REGION_NAME
-- OSGRID_REGION_UUID
-- OSGRID_REGION_LOCATION
-- OSGRID_EXTERNAL_HOSTNAME
-
-Optional:
-
-- OSGRID_INTERNAL_PORT (default 9000)
-
-Run:
-
-```bash
-docker compose -f docker-compose.osgrid.yml up -d
-```
-
-Or use:
-
-```bash
-./run-osgrid.sh
-```
-
-### Required OSGrid Region Fields
-
-The generated `Regions/Region.ini` contains:
-
-- Region Name (`OSGRID_REGION_NAME`)
-- RegionUUID (`OSGRID_REGION_UUID`)
-- Location (`OSGRID_REGION_LOCATION`)
-- ExternalHostName (`OSGRID_EXTERNAL_HOSTNAME`)
 
 
 ## Standalone (MariaDB) Variables
@@ -406,9 +357,6 @@ Volume mappings used by the service:
 - Source/release stacks:
   - `opensim-workspace` -> `/workspace`
   - `opensim-regions` -> `/regions`
-- OSGrid stack:
-  - `osgrid-workspace` -> `/workspace`
-  - `osgrid-regions` -> `/regions`
 - All stacks:
   - `opencode-data` -> `/root/.local/share/opencode`
   - `opencode-state` -> `/root/.local/state/opencode`
@@ -461,21 +409,7 @@ docker push bithatch/opensim-ai-standalone:latest
 docker push bithatch/opensim-ai-standalone:${TAG_DATE}
 ```
 
-### 5) Build and push OSGrid runtime image
-
-```bash
-docker build \
-  --target osgrid-runtime \
-  --build-arg OSGRID_RELEASE_URL=https://download.osgrid.org/osgrid-opensim-04172026.v0.9.3.ef8a36b.zip \
-  -t bithatch/opensim-ai-osgrid:latest \
-  -t bithatch/opensim-ai-osgrid:${TAG_DATE} \
-  .
-
-docker push bithatch/opensim-ai-osgrid:latest
-docker push bithatch/opensim-ai-osgrid:${TAG_DATE}
-```
-
-### 6) Compose image selection
+### 5) Compose image selection
 
 The main compose files default to published images and can run without local
 build steps.
@@ -485,13 +419,11 @@ override files:
 
 - `docker-compose.local.yml`
 - `docker-compose.release.local.yml`
-- `docker-compose.osgrid.local.yml`
 
 Those override files add `build:` sections and keep current local image tags:
 
 - source: `opensim-ai-standalone:dev`
 - release: `opensim-ai-standalone:latest`
-- osgrid: `opensim-ai-osgrid:latest`
 - console MCP: `opensim-console2mcp:latest`
 - metaverse MCP: `opensim-metaverse2mcp:latest`
 - opencode: `opensim-opencode:latest`
@@ -500,7 +432,6 @@ If you need to override published images manually, set one or more of:
 
 - `OPENSIM_SOURCE_IMAGE`
 - `OPENSIM_RELEASE_IMAGE`
-- `OPENSIM_OSGRID_IMAGE`
 
 ## Notes
 

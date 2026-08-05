@@ -55,7 +55,7 @@ services:
       MARIADB_PASSWORD: "${MARIADB_PASSWORD:-${MYSQL_PASSWORD:-opensimpassword}}"
     volumes:
       - opensim-workspace:/workspace
-      - opensim-regions:/opt/opensim/bin/Regions
+      - opensim-config:/config
     depends_on:
       mariadb:
         condition: service_healthy
@@ -66,18 +66,12 @@ services:
     pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
     volumes:
       - opensim-workspace:/workspace
-      - opensim-regions:/opt/opensim/bin/Regions
+      - opensim-config:/config
       - opensim-assetcache:/opt/opensim/bin/assetcache
       - opensim-maptiles:/opt/opensim/bin/maptiles
     ports:
       - "${OPENSIM_REGION_PORT:-9000}:9000/tcp"
       - "${OPENSIM_REGION_PORT:-9000}:9000/udp"
-      - "${OPENSIM_REGION_PORT_2:-9001}:9001/tcp"
-      - "${OPENSIM_REGION_PORT_2:-9001}:9001/udp"
-      - "${OPENSIM_REGION_PORT_3:-9002}:9002/tcp"
-      - "${OPENSIM_REGION_PORT_3:-9002}:9002/udp"
-      - "${OPENSIM_REGION_PORT_4:-9003}:9003/tcp"
-      - "${OPENSIM_REGION_PORT_3:-9003}:9003/udp"
     depends_on:
       opensim-init:
         condition: service_completed_successfully
@@ -185,7 +179,7 @@ services:
       - "${OPENCODE_PORT:-8998}:8998/tcp"
     volumes:
       - opensim-workspace:/workspace
-      - opensim-regions:/regions
+      - opensim-config:/opensim-config
       - opencode-config:/root/.config/opencode
       - opencode-data:/root/.local/share/opencode
       - opencode-state:/root/.local/state/opencode
@@ -202,7 +196,7 @@ volumes:
   opensim-mariadb:
   opensim-workspace:
   opensim-templates:
-  opensim-regions:
+  opensim-config:
   opensim-assetcache:
   opensim-maptiles:
   opencode-data:
