@@ -19,6 +19,8 @@ This is done by integrating [opensim-console2mcp](https://github.com/opensim-sta
 
 *This is all very experimental! Do not let the bot lose on anything you care about! Take backups of your regions*
 
+*I am actively working on this! It may change ports, volumes or other behaviour. Once you have a working version, I recommend pinning that version and monitoring updates!*
+
 ### Temporary Limitations
 
  * The can currently only be a single bot
@@ -310,7 +312,6 @@ The metaverse MCP sidecar uses these environment variables:
 - `OPENCODE_INITIAL_PROVIDER` (optional startup default provider for IM conversations; runtime-overridable)
 - `OPENCODE_INITIAL_MODEL` (optional startup default model for IM conversations; runtime-overridable)
 - `OPENCODE_REQUEST_TIMEOUT_SECONDS`
-- `OPENCODE_EVENT_MODE` (`off`, `observe`, `active`; defaults to `off` in compose)
 - `OPENCODE_HANDLER_FIRSTNAME` (optional; defaults to `OPENSIM_ESTATE_OWNER_FIRST`)
 - `OPENCODE_HANDLER_LASTNAME` (optional; defaults to `OPENSIM_ESTATE_OWNER_LAST`)
 - `PROMPT_HANDLING_ENABLED`
