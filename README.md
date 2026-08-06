@@ -265,6 +265,9 @@ The metaverse MCP sidecar uses these environment variables:
 - `OPENCODE_REQUEST_TIMEOUT_SECONDS`
 - `OPENCODE_HANDLER_FIRSTNAME` (optional; defaults to `OPENSIM_ESTATE_OWNER_FIRST`)
 - `OPENCODE_HANDLER_LASTNAME` (optional; defaults to `OPENSIM_ESTATE_OWNER_LAST`)
+- `OPENCODE_LSL_DIALOG_BRIDGE_TRUSTED_OWNER_ID` (optional; trusted bridge object owner UUID)
+- `OPENCODE_LSL_DIALOG_BRIDGE_TRUSTED_OBJECT_ID` (optional; trusted bridge object UUID)
+- `OPENCODE_LSL_DIALOG_BRIDGE_REQUIRE_TRUSTED_SENDER` (`true`/`false`, default: `true`)
 - `PROMPT_HANDLING_ENABLED`
 - `PROMPT_PROJECT_AGENTS_ENABLED`
 - `PROMPT_PROJECT_AGENTS_FILE` (default in this stack: `/app/AGENTS.md`)
@@ -289,6 +292,10 @@ Prompt bootstrap behavior:
 - This repository ships a stack-level `AGENTS.md` prompt file at project root.
 - Compose mounts that file into `opensim-metaverse2mcp` at `/app/AGENTS.md` and sets `PROMPT_PROJECT_AGENTS_FILE=/app/AGENTS.md` by default.
 - You can edit `AGENTS.md` to tune assistant behavior without rebuilding images.
+
+Dialog bridge bootstrap behavior:
+
+- `DialogBridgeInstall` auto-discovers the in-image script at `lsl/dialog-bridge.lsl` (runtime path: `/app/lsl/dialog-bridge.lsl`) when `scriptSource` is omitted.
 
 ## OpenSim MCP Server (opensim-console2mcp)
 
@@ -329,14 +336,38 @@ Defaults:
 - Server password pass-through: `OPENCODE_SERVER_PASSWORD`
 - Project directory: `/workspace` (`OPENCODE_PROJECT_DIR`)
 
-At startup, an init container writes `opencode.json` into the shared config
-volume so Opencode is preconfigured to use the MCP sidecar.
+At startup, an init container writes `opencode.json` into the shared workspace
+volume so Opencode is preconfigured to use the MCP sidecar and enforce a
+stack-level permission baseline.
 
 Generated config content:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "read": "allow",
+    "write": {
+      "/workspace/**": "ask",
+      "/config/**": "ask",
+      "*": "deny"
+    },
+    "edit": {
+      "/workspace/**": "ask",
+      "/config/**": "ask",
+      "*": "deny"
+    },
+    "bash": "ask",
+    "external_directory": {
+      "/workspace": "allow",
+      "/workspace/*": "allow",
+      "/config": "ask",
+      "/config/*": "ask",
+      "/root/.local/share/opencode/tool-output": "allow",
+      "/root/.local/share/opencode/tool-output/*": "allow",
+      "*": "deny"
+    }
+  },
   "mcp": {
     "local_host_mcp": {
       "type": "remote",
@@ -352,11 +383,18 @@ Generated config content:
 }
 ```
 
+Permission behavior in this stack:
+
+- Read access is allowed.
+- File write/edit and shell command execution are interactive (ask).
+- Paths outside `/workspace` and `/config` are denied by default, except
+  Opencode tool-output paths needed for truncated tool logs.
+
 Volume mappings used by the service:
 
 - Source/release stacks:
   - `opensim-workspace` -> `/workspace`
-  - `opensim-regions` -> `/regions`
+  - `opensim-config` -> `/config`
 - All stacks:
   - `opencode-data` -> `/root/.local/share/opencode`
   - `opencode-state` -> `/root/.local/state/opencode`

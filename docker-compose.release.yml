@@ -122,12 +122,17 @@ services:
       OPENCODE_REQUEST_TIMEOUT_SECONDS: "${OPENCODE_REQUEST_TIMEOUT_SECONDS:-60}"
       OPENCODE_HANDLER_FIRSTNAME: "${OPENCODE_HANDLER_FIRSTNAME:-${OPENSIM_ESTATE_OWNER_FIRST:-Admin}}"
       OPENCODE_HANDLER_LASTNAME: "${OPENCODE_HANDLER_LASTNAME:-${OPENSIM_ESTATE_OWNER_LAST:-User}}"
+      OPENCODE_LSL_DIALOG_BRIDGE_TRUSTED_OWNER_ID: "${OPENCODE_LSL_DIALOG_BRIDGE_TRUSTED_OWNER_ID:-}"
+      OPENCODE_LSL_DIALOG_BRIDGE_TRUSTED_OBJECT_ID: "${OPENCODE_LSL_DIALOG_BRIDGE_TRUSTED_OBJECT_ID:-}"
+      OPENCODE_LSL_DIALOG_BRIDGE_REQUIRE_TRUSTED_SENDER: "${OPENCODE_LSL_DIALOG_BRIDGE_REQUIRE_TRUSTED_SENDER:-true}"
+      OPENCODE_LSL_DIALOG_BRIDGE_TRUST_STATE_FILE: "${OPENCODE_LSL_DIALOG_BRIDGE_TRUST_STATE_FILE:-/config/opensim-metaverse2mcp/dialog-bridge-trust-{bot_uuid}.json}"
       PROMPT_HANDLING_ENABLED: "${PROMPT_HANDLING_ENABLED:-true}"
       PROMPT_PROJECT_AGENTS_ENABLED: "${PROMPT_PROJECT_AGENTS_ENABLED:-true}"
       PROMPT_PROJECT_AGENTS_FILE: "${PROMPT_PROJECT_AGENTS_FILE:-/app/AGENTS.md}"
       PROMPT_NOTECARD_REQUIRE_HANDLER: "${PROMPT_NOTECARD_REQUIRE_HANDLER:-true}"
     volumes:
       - ./AGENTS.md:/app/AGENTS.md:ro
+      - opensim-config:/config
     ports:
       - "${METAVERSE_MCP_PORT:-8999}:${METAVERSE_MCP_PORT:-8999}/tcp"
     depends_on:
@@ -148,6 +153,29 @@ services:
         cat > /workspace/opencode.json <<'EOF'
         {
           "$$schema": "https://opencode.ai/config.json",
+          "permission": {
+            "read": "allow",
+            "write": {
+              "/workspace/**": "ask",
+              "/config/**": "ask",
+              "*": "deny"
+            },
+            "edit": {
+              "/workspace/**": "ask",
+              "/config/**": "ask",
+              "*": "deny"
+            },
+            "bash": "ask",
+            "external_directory": {
+              "/workspace": "allow",
+              "/workspace/*": "allow",
+              "/config": "ask",
+              "/config/*": "ask",
+              "/root/.local/share/opencode/tool-output": "allow",
+              "/root/.local/share/opencode/tool-output/*": "allow",
+              "*": "deny"
+            }
+          },
           "mcp": {
             "local_host_mcp": {
               "type": "remote",
@@ -179,7 +207,7 @@ services:
       - "${OPENCODE_PORT:-8998}:8998/tcp"
     volumes:
       - opensim-workspace:/workspace
-      - opensim-config:/opensim-config
+      - opensim-config:/config
       - opencode-config:/root/.config/opencode
       - opencode-data:/root/.local/share/opencode
       - opencode-state:/root/.local/state/opencode
