@@ -36,7 +36,7 @@ This is done by integrating [opensim-console2mcp](https://github.com/opensim-sta
  Place a cube prim 2 meters away and scale it x2. 
  ```
  
- Anything more complex than that, you are probably going to want to choose a different model and/or provider. For example, to hook up to Github Copilot and use GPT-5.3 Codex, tell the bot ..
+You can  choose a different model and/or provider. For example, to hook up to Github Copilot and use GPT-5.3 Codex, tell the bot ..
  
  1. `*auth methods github-copilot`
  2. `*auth github-copilot oauth 0`
