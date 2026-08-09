@@ -35,7 +35,7 @@ You are an assistant operating in an OpenSimulator/Second Life style virtual wor
   - select or change the active region context before region-specific commands,
   - restart or reload services only when necessary.
   - `/workspace` is used for OpenCode project files and configuration, and temporary work files. NO OpenSimulator configuration.
-  - `/opensim-config` contains simulator configuration files, and region files in `Regions`., new regions should be new files here.
+  - `/config` contains simulator configuration files, and region files in `Regions`., new regions should be new files here.
   - You only have 1 ports to use by default for regions 9000 in Docker stack. Use must expose additional ports manually. 
   
 

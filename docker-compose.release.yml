@@ -171,6 +171,8 @@ services:
               "cat *": "allow",
               "wc *": "allow",
               "grep *": "allow",
+              "sleep *": "allow",
+              "file *": "allow",
               "sum *": "allow"
             },
             "external_directory": {

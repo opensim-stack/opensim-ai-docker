@@ -165,7 +165,16 @@ services:
               "/config/**": "ask",
               "*": "deny"
             },
-            "bash": "ask",
+            "bash": {
+              "*": "ask",
+              "ls *": "allow",  
+              "cat *": "allow",
+              "wc *": "allow",
+              "grep *": "allow",
+              "sleep *": "allow",
+              "file *": "allow",
+              "sum *": "allow"
+            },
             "external_directory": {
               "/workspace": "allow",
               "/workspace/*": "allow",
