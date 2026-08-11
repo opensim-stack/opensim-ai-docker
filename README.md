@@ -4,7 +4,7 @@
 
 A Docker stack for OpenSimulator and OS Grid that makes it easy to setup an AI enabled virtual world.
 
-This is done by integrating [opensim-console2mcp](https://github.com/opensim-stack/opensim-console2mcp), [opensim-metaverse2mcp](https://github.com/opensim-stack/opensim-metaverse2mcp), and [opensim-opencode](https://github.com/opensim-stack/opensim-opencode) as part of the stack. `opensim-console2mcp` bridges the OpenSimulator REST console to MCP, `opensim-metaverse2mcp` provides a bridge to a bot controlled by MCP, and `opensim-opencode` runs Opencode in server mode preconfigured to use those MCP bridges.
+This is done by integrating [opensim-console2mcp](https://github.com/opensim-stack/opensim-console2mcp), [opensim-metaverse2mcp](https://github.com/opensim-stack/opensim-metaverse2mcp), [opensim-opencode](https://github.com/opensim-stack/opensim-opencode) and [opensim-blender](https://github.com/opensim-stack/opensim-blender) as part of the stack. `opensim-console2mcp` bridges the OpenSimulator REST console to MCP, `opensim-metaverse2mcp` provides a bridge to a bot controlled by MCP, `opensim-opencode` runs Opencode in server mode preconfigured to use those MCP bridges, and `opensim-blender` runs a headless Blender instance with the Blender MCP add-on for 3D modelling tasks.
 
  * Manage your OpenSimulator server using natural language. Anything that the console can do, your AI can do including region management, user management, configuration and lots more.
  * Start a conversation with the AI bot to start giving it any instructions you like
@@ -13,6 +13,7 @@ This is done by integrating [opensim-console2mcp](https://github.com/opensim-sta
  * Bot can create and configure your environment settings.
  * Bot can inspect inventories, send and copy items and more.
  * Bot can download and upload media of all types.
+ * Blender MCP add-on lets the AI create and edit 3D models in the shared `/workspace`, exporting to glTF for use in-world.
 
 ## A Warning - This Is Work In Progress
 
@@ -91,6 +92,7 @@ By default, compose files use published images via these variables:
 - `OPENSIM_SOURCE_IMAGE` (default `bithatch/opensim-ai-standalone:dev-latest`)
 - `OPENSIM_RELEASE_IMAGE` (default `bithatch/opensim-ai-standalone:latest`)
 - `OPENSIM_METAVERSE2MCP_IMAGE` (default `bithatch/opensim-metaverse2mcp:latest`)
+- `OPENSIM_BLENDER_IMAGE` (default `bithatch/opensim-blender:latest`)
 
 The helper scripts use local override compose files (`docker-compose.*.local.yml`) to
 build and run local images with the current local tags.
@@ -155,72 +157,45 @@ Or use:
 ./run-release.sh
 ```
 
+## OpenSim Blender MCP Server (opensim-blender)
 
+This stack also runs a headless Blender sidecar using
+`bithatch/opensim-blender:latest`.
 
+The container starts Blender with the upstream
+[ahujasid/blender-mcp](https://github.com/ahujasid/blender-mcp) add-on.
+Because upstream runs MCP over stdio (not native HTTP), the image also runs an
+in-container MCP proxy so the stack can connect over HTTP on port `8996`.
 
-## Standalone (MariaDB) Variables
+Default endpoint inside the stack:
 
-These apply to modes 1 and 2:
+- `http://opensim-blender:8996/mcp`
 
-- OPENSIM_HOSTNAME
-- OPENSIM_REGION_NAME
-- OPENSIM_REGION_X
-- OPENSIM_REGION_Y
-- OPENSIM_REGION_PORT
-- OPENSIM_ESTATE_NAME
-- OPENSIM_ESTATE_OWNER_FIRST
-- OPENSIM_ESTATE_OWNER_LAST
-- OPENSIM_ESTATE_OWNER_PASSWORD
-- OPENSIM_ESTATE_OWNER_EMAIL
-- OPENSIM_ESTATE_OWNER_UUID
-- OPENSIM_GRID_NAME
-- OPENSIM_GRID_NICK
-- OPENSIM_WELCOME_MESSAGE
-- OPENSIM_CONSOLE_MODE
-- OPENSIM_CONSOLE_USER
-- OPENSIM_CONSOLE_PASS
-- OPENSIM_CREATE_BOT_USER
-- OPENSIM_LOGIN_FIRSTNAME
-- OPENSIM_LOGIN_LASTNAME
-- OPENSIM_LOGIN_PASSWORD
-- OPENSIM_LOGIN_EMAIL
-- OPENSIM_LOGIN_UUID
-- OPENSIM_LOGIN_MODEL
-- MARIADB_HOST
-- MARIADB_DATABASE
-- MARIADB_USER
-- MARIADB_PASSWORD
-- MARIADB_ROOT_PASSWORD
+Environment variables:
 
-Legacy compatibility: `MYSQL_*` names are still accepted as fallbacks, but new
-setups should use `MARIADB_*`.
+- `OPENSIM_BLENDER_IMAGE`
+- `BLENDER_MCP_HOST` (default `0.0.0.0`)
+- `BLENDER_MCP_PORT` (default `8996`)
+- `BLENDER_TCP_PROTOCOL_HOST` (default `127.0.0.1`)
+- `BLENDER_TCP_PROTOCOL_PORT` (default `9876`)
+- `BLENDER_PROJECT_DIR` (default `/workspace`)
+- `BLENDER_EXTRA_ARGS`
 
-## REST Console
+Legacy compatibility aliases still accepted by the image:
 
-This project enables the OpenSimulator REST console by default via:
+- `BLENDER_BRIDGE_HOST` -> `BLENDER_TCP_PROTOCOL_HOST`
+- `BLENDER_BRIDGE_PORT` -> `BLENDER_TCP_PROTOCOL_PORT`
 
-- `OPENSIM_CONSOLE_MODE=rest`
-- `OPENSIM_CONSOLE_USER`
-- `OPENSIM_CONSOLE_PASS`
+Volume mappings:
 
-The REST endpoints are available on the simulator HTTP port:
+- `opensim-workspace` -> `/workspace`
+- `blender-config` -> `/root/.config/blender`
+- `blender-cache` -> `/root/.cache/blender`
+- `blender-data` -> `/root/.local/share/blender`
 
-- `POST /StartSession/`
-- `POST /ReadResponses/<SessionID>/`
-- `POST /SessionCommand/`
-- `POST /CloseSession/`
-
-For default standalone settings, this is usually:
-
-- `http://<host>:${OPENSIM_REGION_PORT}`
-
-If you already initialized a config volume before enabling these settings,
-recreate the stack with volumes to regenerate config files:
-
-```bash
-docker compose down -v
-docker compose up -d
-```
+The shared workspace lets Opencode and Blender exchange project files. Models can
+be exported from Blender as glTF (`.glb`/`.gltf`) and then uploaded into the
+OpenSim world via the metaverse bot.
 
 ## OpenSim Metaverse MCP Server (opensim-metaverse2mcp)
 
@@ -331,13 +306,14 @@ Defaults:
 - Server port: `8998` (`OPENCODE_PORT`)
 - MCP endpoint URL for Opencode: `http://opensim-console2mcp:8997/mcp` (`OPENCODE_MCP_URL`)
 - Metaverse MCP endpoint URL for Opencode: `http://opensim-metaverse2mcp:8999/mcp` (`OPENCODE_METAVERSE_MCP_URL`)
+- Blender MCP endpoint URL for Opencode: `http://opensim-blender:8996/mcp` (`OPENCODE_BLENDER_MCP_URL`)
 - MCP auth: none by default
 - Host bind: `0.0.0.0` (`OPENCODE_HOST`)
 - Server password pass-through: `OPENCODE_SERVER_PASSWORD`
 - Project directory: `/workspace` (`OPENCODE_PROJECT_DIR`)
 
 At startup, an init container writes `opencode.json` into the shared workspace
-volume so Opencode is preconfigured to use the MCP sidecar and enforce a
+volume so Opencode is preconfigured to use the MCP sidecars and enforce a
 stack-level permission baseline.
 
 Generated config content:
@@ -377,6 +353,11 @@ Generated config content:
     "metaverse_mcp": {
       "type": "remote",
       "url": "http://opensim-metaverse2mcp:8999/mcp",
+      "enabled": true
+    },
+    "blender_mcp": {
+      "type": "remote",
+      "url": "http://opensim-blender:8996/mcp",
       "enabled": true
     }
   }
@@ -464,12 +445,13 @@ Those override files add `build:` sections and keep current local image tags:
 - release: `opensim-ai-standalone:latest`
 - console MCP: `opensim-console2mcp:latest`
 - metaverse MCP: `opensim-metaverse2mcp:latest`
-- opencode: `opensim-opencode:latest`
+- blender: `opensim-blender:latest`
 
 If you need to override published images manually, set one or more of:
 
 - `OPENSIM_SOURCE_IMAGE`
 - `OPENSIM_RELEASE_IMAGE`
+- `OPENSIM_BLENDER_IMAGE`
 
 ## Notes
 

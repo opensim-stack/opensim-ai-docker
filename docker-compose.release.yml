@@ -133,11 +133,34 @@ services:
     volumes:
       - ./AGENTS.md:/app/AGENTS.md:ro
       - opensim-config:/config
+      - opensim-workspace:/workspace
     ports:
       - "${METAVERSE_MCP_PORT:-8999}:${METAVERSE_MCP_PORT:-8999}/tcp"
     depends_on:
       opensim:
         condition: service_started
+
+  opensim-blender:
+    image: "${OPENSIM_BLENDER_IMAGE:-bithatch/opensim-blender:latest}"
+    restart: unless-stopped
+    pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
+    environment:
+      BLENDER_MCP_HOST: "${BLENDER_MCP_HOST:-0.0.0.0}"
+      BLENDER_MCP_PORT: "${BLENDER_MCP_PORT:-8996}"
+      BLENDER_TCP_PROTOCOL_HOST: "${BLENDER_TCP_PROTOCOL_HOST:-127.0.0.1}"
+      BLENDER_TCP_PROTOCOL_PORT: "${BLENDER_TCP_PROTOCOL_PORT:-9876}"
+      BLENDER_PROJECT_DIR: "${BLENDER_PROJECT_DIR:-/workspace}"
+      BLENDER_EXTRA_ARGS: "${BLENDER_EXTRA_ARGS:-}"
+    volumes:
+      - opensim-workspace:/workspace
+      - blender-config:/root/.config/blender
+      - blender-cache:/root/.cache/blender
+      - blender-data:/root/.local/share/blender
+    ports:
+      - "${BLENDER_MCP_PORT:-8996}:${BLENDER_MCP_PORT:-8996}/tcp"
+    depends_on:
+      opensim-opencode-init:
+        condition: service_completed_successfully
 
   opensim-opencode-init:
     image: alpine:3.22
@@ -146,6 +169,7 @@ services:
     environment:
       OPENCODE_MCP_URL: "${OPENCODE_MCP_URL:-http://opensim-console2mcp:8997/mcp}"
       OPENCODE_METAVERSE_MCP_URL: "${OPENCODE_METAVERSE_MCP_URL:-http://opensim-metaverse2mcp:8999/mcp}"
+      OPENCODE_BLENDER_MCP_URL: "${OPENCODE_BLENDER_MCP_URL:-http://opensim-blender:8996/mcp}"
     command:
       - /bin/sh
       - -ec
@@ -167,7 +191,7 @@ services:
             },
             "bash": {
               "*": "ask",
-              "ls *": "allow",  
+              "ls *": "allow",
               "cat *": "allow",
               "wc *": "allow",
               "grep *": "allow",
@@ -194,6 +218,11 @@ services:
             "metaverse_mcp": {
               "type": "remote",
               "url": "${OPENCODE_METAVERSE_MCP_URL:-http://opensim-metaverse2mcp:8999/mcp}",
+              "enabled": true
+            },
+            "blender_mcp": {
+              "type": "remote",
+              "url": "${OPENCODE_BLENDER_MCP_URL:-http://opensim-blender:8996/mcp}",
               "enabled": true
             }
           }
@@ -228,6 +257,8 @@ services:
         condition: service_started
       opensim-metaverse2mcp:
         condition: service_started
+      opensim-blender:
+        condition: service_started
 
 volumes:
   opensim-mariadb:
@@ -240,3 +271,6 @@ volumes:
   opencode-state:
   opencode-cache:
   opencode-config:
+  blender-config:
+  blender-cache:
+  blender-data:
