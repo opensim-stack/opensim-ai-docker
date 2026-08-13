@@ -10,8 +10,12 @@ OPENSIM_DIR="${OPENSIM_DIR:-/opt/opensim}"
 TEMPLATES_DIR="${TEMPLATES_DIR:-${OPENSIM_DIR}/docker/templates/opensim}"
 BIN_DIR="${BIN_DIR:-${OPENSIM_DIR}/bin}"
 BOT_STARTUP_FILE="${CONFIG_DIR}/bot_startup_commands.txt"
+REGION_STARTUP_FILE="${CONFIG_DIR}/region_startup_commands.txt"
+INVENTORY_STARTUP_FILE="${CONFIG_DIR}/inventory_startup_commands.txt"
 LOCAL_STARTUP_FILE="${CONFIG_DIR}/local_startup_commands.txt"
 MERGED_STARTUP_FILE="${CONFIG_DIR}/startup_commands.txt"
+DEFAULT_OAR_FILE="${DEFAULT_OAR_FILE:-${OPENSIM_DIR}/docker/data/OAR-Sandbox(1X1).tgz}"
+DEFAULT_IAR_FILE="${DEFAULT_IAR_FILE:-${OPENSIM_DIR}/docker/data/Cube-Bot-IAR.iar}"
 
 # vvv remove
 REGIONS_DIR="${REGIONS_DIR:-${BIN_DIR}/Regions}"
@@ -155,13 +159,81 @@ if [ "$(printf '%s' "${OPENSIM_CREATE_BOT_USER}" | tr '[:upper:]' '[:lower:]')" 
     printf '[init] Updated startup command to create bot user %s %s.\n' "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}"
 fi
 
-rm -f "${MERGED_STARTUP_FILE}"
-touch "${MERGED_STARTUP_FILE}"
-if [ -f "${BOT_STARTUP_FILE}" ]; then
-    cat "${BOT_STARTUP_FILE}" >> "${MERGED_STARTUP_FILE}"
+should_bootstrap_region_oar="false"
+regions_table_exists="$(mariadb -N -B \
+    -h "${MARIADB_HOST}" \
+    -u "${MARIADB_USER}" \
+    "--password=${MARIADB_PASSWORD}" \
+    -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${MARIADB_DATABASE}' AND table_name='regions';" \
+    2>/dev/null || printf '0')"
+
+if [ "${regions_table_exists}" -gt 0 ]; then
+    region_count="$(mariadb -N -B \
+        -h "${MARIADB_HOST}" \
+        -u "${MARIADB_USER}" \
+        "--password=${MARIADB_PASSWORD}" \
+        "${MARIADB_DATABASE}" \
+        -e "SELECT COUNT(*) FROM regions;" \
+        2>/dev/null || printf '0')"
+    if [ "${region_count}" -eq 0 ]; then
+        should_bootstrap_region_oar="true"
+    fi
+else
+    # If schema is not initialized yet, treat it as empty and bootstrap once.
+    should_bootstrap_region_oar="true"
 fi
-if [ -f "${LOCAL_STARTUP_FILE}" ]; then
-    cat "${LOCAL_STARTUP_FILE}" >> "${MERGED_STARTUP_FILE}"
+
+if [ "${should_bootstrap_region_oar}" = "true" ]; then
+    if [ -f "${DEFAULT_OAR_FILE}" ]; then
+        {
+            printf '# opensim-ai-docker region bootstrap begin\n'
+            printf 'load oar "%s"\n' "${DEFAULT_OAR_FILE}"
+            printf '# opensim-ai-docker region bootstrap end\n'
+        } > "${REGION_STARTUP_FILE}"
+        printf '[init] Added startup command to import default region OAR %s.\n' "${DEFAULT_OAR_FILE}"
+    else
+        rm -f "${REGION_STARTUP_FILE}"
+        printf '[init] WARNING: Default OAR file not found at %s; skipping automatic OAR import.\n' "${DEFAULT_OAR_FILE}" >&2
+    fi
+else
+    rm -f "${REGION_STARTUP_FILE}"
+    printf '[init] Existing region rows detected; skipping automatic OAR import.\n'
 fi
+
+should_bootstrap_inventory_iar="${should_bootstrap_region_oar}"
+if [ "${should_bootstrap_inventory_iar}" = "true" ]; then
+    if [ -f "${DEFAULT_IAR_FILE}" ]; then
+        {
+            printf '# opensim-ai-docker inventory bootstrap begin\n'
+            printf 'load iar "%s" "%s" "/" "%s" "%s"\n' \
+                "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}" \
+                "${OPENSIM_LOGIN_PASSWORD}" "${DEFAULT_IAR_FILE}"
+            printf '# opensim-ai-docker inventory bootstrap end\n'
+        } > "${INVENTORY_STARTUP_FILE}"
+        printf '[init] Added startup command to import default IAR %s for %s %s.\n' \
+            "${DEFAULT_IAR_FILE}" "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}"
+    else
+        rm -f "${INVENTORY_STARTUP_FILE}"
+        printf '[init] WARNING: Default IAR file not found at %s; skipping automatic IAR import.\n' "${DEFAULT_IAR_FILE}" >&2
+    fi
+else
+    rm -f "${INVENTORY_STARTUP_FILE}"
+    printf '[init] Existing region rows detected; skipping automatic IAR import.\n'
+fi
+  
+ rm -f "${MERGED_STARTUP_FILE}"
+ touch "${MERGED_STARTUP_FILE}"
+ if [ -f "${BOT_STARTUP_FILE}" ]; then
+     cat "${BOT_STARTUP_FILE}" >> "${MERGED_STARTUP_FILE}"
+ fi
+ if [ -f "${REGION_STARTUP_FILE}" ]; then
+     cat "${REGION_STARTUP_FILE}" >> "${MERGED_STARTUP_FILE}"
+ fi
+ if [ -f "${INVENTORY_STARTUP_FILE}" ]; then
+     cat "${INVENTORY_STARTUP_FILE}" >> "${MERGED_STARTUP_FILE}"
+ fi
+ if [ -f "${LOCAL_STARTUP_FILE}" ]; then
+     cat "${LOCAL_STARTUP_FILE}" >> "${MERGED_STARTUP_FILE}"
+ fi
 
 printf '[init] Standalone config generation complete.\n'
