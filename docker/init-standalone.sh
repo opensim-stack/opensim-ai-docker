@@ -3,7 +3,7 @@ set -eu
 
 # Exposed volumes
 WORKSPACE_DIR="${WORKSPACE_DIR:-/workspace}"
-CONFIG_DIR="${OPENSIM_DIR:-/config}"
+CONFIG_DIR="${CONFIG_DIR:-/config}"
 
 # Default directories and filees
 OPENSIM_DIR="${OPENSIM_DIR:-/opt/opensim}"
@@ -61,6 +61,19 @@ export OPENSIM_HOSTNAME OPENSIM_REGION_NAME OPENSIM_REGION_X OPENSIM_REGION_Y \
     OPENSIM_CREATE_BOT_USER OPENSIM_LOGIN_FIRSTNAME OPENSIM_LOGIN_LASTNAME \
     OPENSIM_LOGIN_PASSWORD OPENSIM_LOGIN_EMAIL OPENSIM_LOGIN_UUID OPENSIM_LOGIN_MODEL
 
+sql_escape() {
+    printf "%s" "$1" | sed "s/'/''/g"
+}
+
+count_region_ini_files() {
+    if [ ! -d "$1" ]; then
+        printf '0'
+        return
+    fi
+
+    find "$1" -maxdepth 1 -type f -name '*.ini' | wc -l | tr -d ' '
+}
+
 printf '[init] Waiting for MariaDB at %s...\n' "${MARIADB_HOST}"
 attempts=0
 until mariadb-admin ping -h "${MARIADB_HOST}" -u "${MARIADB_USER}" "--password=${MARIADB_PASSWORD}" --silent 2>/dev/null; do
@@ -87,7 +100,7 @@ if [ -z "$(find ${CONFIG_DIR} -mindepth 1 -maxdepth 1)" ]; then
     mkdir -p "${CONFIG_DIR}/config-include" "${CONFIG_DIR}/Regions"
 
     # Copy anything from the actual OpenSim bin directory to the config directory, if it exists. And only if the source is not a symlink, and only if it contains files.
-    if [ -d "${BIN_DIR}/config-include"  -a ! -L "${BIN_DIR}/config-includddddddddddddddddddddddddddde" -a -n "$(find ${BIN_DIR}/config-include -mindepth 1 -maxdepth 1)" ]; then
+    if [ -d "${BIN_DIR}/config-include"  -a ! -L "${BIN_DIR}/config-include" -a -n "$(find ${BIN_DIR}/config-include -mindepth 1 -maxdepth 1)" ]; then
         printf '[init] Copying installed config-include files.\n'
         cp -Rp ${BIN_DIR}/config-include/* "${CONFIG_DIR}/config-include"
     fi
@@ -124,42 +137,9 @@ if [ -z "$(find ${CONFIG_DIR} -mindepth 1 -maxdepth 1)" ]; then
         < "${TEMPLATES_DIR}/Regions/Region.ini" > "${CONFIG_DIR}/Regions/Region.ini"
 fi
 
-
-if [ "$(printf '%s' "${OPENSIM_CREATE_BOT_USER}" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
-    if [ -z "${OPENSIM_LOGIN_UUID}" ]; then
-        if [ -r /proc/sys/kernel/random/uuid ]; then
-            OPENSIM_LOGIN_UUID="$(cat /proc/sys/kernel/random/uuid)"
-        else
-            OPENSIM_LOGIN_UUID="$(uuidgen | tr '[:upper:]' '[:lower:]')"
-        fi
-    fi
-
-    touch "${BOT_STARTUP_FILE}"
-    TMP_FILE="${BOT_STARTUP_FILE}.tmp.$$"
-    # Replace previously managed bot bootstrap blocks (legacy and current formats).
-    awk '
-        BEGIN { in_block=0; skip_next=0 }
-        /^# opensim-ai-docker bot bootstrap begin$/ { in_block=1; next }
-        in_block && /^# opensim-ai-docker bot bootstrap end$/ { in_block=0; next }
-        in_block { next }
-        /^# opensim-ai-docker bot bootstrap$/ { skip_next=1; next }
-        skip_next { skip_next=0; next }
-        { print }
-    ' "${BOT_STARTUP_FILE}" > "${TMP_FILE}"
-    mv "${TMP_FILE}" "${BOT_STARTUP_FILE}"
-
-    {
-        printf '\n# opensim-ai-docker bot bootstrap begin\n'
-        printf 'create user "%s" "%s" "%s" "%s" "%s" "%s"\n' \
-            "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}" \
-            "${OPENSIM_LOGIN_PASSWORD}" "${OPENSIM_LOGIN_EMAIL}" \
-            "${OPENSIM_LOGIN_UUID}" "${OPENSIM_LOGIN_MODEL}"
-        printf '# opensim-ai-docker bot bootstrap end\n'
-    } >> "${BOT_STARTUP_FILE}"
-    printf '[init] Updated startup command to create bot user %s %s.\n' "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}"
-fi
-
 should_bootstrap_region_oar="false"
+existing_region_ini_count="$(count_region_ini_files "${CONFIG_DIR}/Regions")"
+
 regions_table_exists="$(mariadb -N -B \
     -h "${MARIADB_HOST}" \
     -u "${MARIADB_USER}" \
@@ -175,12 +155,102 @@ if [ "${regions_table_exists}" -gt 0 ]; then
         "${MARIADB_DATABASE}" \
         -e "SELECT COUNT(*) FROM regions;" \
         2>/dev/null || printf '0')"
-    if [ "${region_count}" -eq 0 ]; then
+    if [ "${region_count}" -eq 0 ] && [ "${existing_region_ini_count}" -eq 0 ]; then
         should_bootstrap_region_oar="true"
     fi
 else
-    # If schema is not initialized yet, treat it as empty and bootstrap once.
-    should_bootstrap_region_oar="true"
+    # If schema is not initialized yet, only bootstrap if there are also no region definitions.
+    if [ "${existing_region_ini_count}" -eq 0 ]; then
+        should_bootstrap_region_oar="true"
+    fi
+fi
+
+if [ "${should_bootstrap_region_oar}" = "true" ]; then
+    printf '[init] No existing regions detected (db rows=%s, region ini files=%s); bootstrap import is enabled.\n' \
+        "${region_count:-0}" "${existing_region_ini_count}"
+else
+    printf '[init] Existing region data detected (db rows=%s, region ini files=%s); bootstrap import is disabled.\n' \
+        "${region_count:-0}" "${existing_region_ini_count}"
+fi
+
+touch "${BOT_STARTUP_FILE}"
+TMP_FILE="${BOT_STARTUP_FILE}.tmp.$$"
+# Replace previously managed bot bootstrap blocks (legacy and current formats).
+awk '
+    BEGIN { in_block=0; skip_next=0 }
+    /^# opensim-ai-docker bot bootstrap begin$/ { in_block=1; next }
+    in_block && /^# opensim-ai-docker bot bootstrap end$/ { in_block=0; next }
+    in_block { next }
+    /^# opensim-ai-docker bot bootstrap$/ { skip_next=1; next }
+    skip_next { skip_next=0; next }
+    { print }
+' "${BOT_STARTUP_FILE}" > "${TMP_FILE}"
+mv "${TMP_FILE}" "${BOT_STARTUP_FILE}"
+
+if [ "$(printf '%s' "${OPENSIM_CREATE_BOT_USER}" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
+    should_add_bot_create_command="false"
+    bot_user_exists="unknown"
+
+    user_accounts_table_exists="$(mariadb -N -B \
+        -h "${MARIADB_HOST}" \
+        -u "${MARIADB_USER}" \
+        "--password=${MARIADB_PASSWORD}" \
+        -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${MARIADB_DATABASE}' AND LOWER(table_name)='useraccounts';" \
+        2>/dev/null || printf '0')"
+
+    if [ "${user_accounts_table_exists}" -gt 0 ]; then
+        first_name_sql="$(sql_escape "${OPENSIM_LOGIN_FIRSTNAME}")"
+        last_name_sql="$(sql_escape "${OPENSIM_LOGIN_LASTNAME}")"
+        existing_bot_user_count="$(mariadb -N -B \
+            -h "${MARIADB_HOST}" \
+            -u "${MARIADB_USER}" \
+            "--password=${MARIADB_PASSWORD}" \
+            "${MARIADB_DATABASE}" \
+            -e "SELECT COUNT(*) FROM UserAccounts WHERE FirstName='${first_name_sql}' AND LastName='${last_name_sql}';" \
+            2>/dev/null || printf '0')"
+
+        if [ "${existing_bot_user_count}" -gt 0 ]; then
+            bot_user_exists="true"
+        else
+            bot_user_exists="false"
+        fi
+
+        if [ "${existing_bot_user_count}" -eq 0 ]; then
+            should_add_bot_create_command="true"
+        fi
+    else
+        # During first-time init before schema creation, only add create-user command if bootstrap is also running.
+        if [ "${should_bootstrap_region_oar}" = "true" ]; then
+            should_add_bot_create_command="true"
+        fi
+
+        # Schema not initialized yet: treat user as not yet existing for bootstrap planning.
+        bot_user_exists="false"
+    fi
+
+    if [ "${should_add_bot_create_command}" = "true" ]; then
+        if [ -z "${OPENSIM_LOGIN_UUID}" ]; then
+            if [ -r /proc/sys/kernel/random/uuid ]; then
+                OPENSIM_LOGIN_UUID="$(cat /proc/sys/kernel/random/uuid)"
+            else
+                OPENSIM_LOGIN_UUID="$(uuidgen | tr '[:upper:]' '[:lower:]')"
+            fi
+        fi
+
+        {
+            printf '\n# opensim-ai-docker bot bootstrap begin\n'
+            printf 'create user "%s" "%s" "%s" "%s" "%s" "%s"\n' \
+                "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}" \
+                "${OPENSIM_LOGIN_PASSWORD}" "${OPENSIM_LOGIN_EMAIL}" \
+                "${OPENSIM_LOGIN_UUID}" "${OPENSIM_LOGIN_MODEL}"
+            printf '# opensim-ai-docker bot bootstrap end\n'
+        } >> "${BOT_STARTUP_FILE}"
+        printf '[init] Added startup command to create bot user %s %s.\n' "${OPENSIM_LOGIN_FIRSTNAME}" "${OPENSIM_LOGIN_LASTNAME}"
+    else
+        printf '[init] Bot user already present (or bootstrap not needed); skipping create-user startup command.\n'
+    fi
+else
+    bot_user_exists="unknown"
 fi
 
 if [ "${should_bootstrap_region_oar}" = "true" ]; then
@@ -200,7 +270,14 @@ else
     printf '[init] Existing region rows detected; skipping automatic OAR import.\n'
 fi
 
-should_bootstrap_inventory_iar="${should_bootstrap_region_oar}"
+# IAR import should depend on whether the target user exists BEFORE startup commands are built.
+should_bootstrap_inventory_iar="false"
+if [ "$(printf '%s' "${OPENSIM_CREATE_BOT_USER}" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
+    if [ "${bot_user_exists:-unknown}" = "false" ]; then
+        should_bootstrap_inventory_iar="true"
+    fi
+fi
+
 if [ "${should_bootstrap_inventory_iar}" = "true" ]; then
     if [ -f "${DEFAULT_IAR_FILE}" ]; then
         {
@@ -218,7 +295,7 @@ if [ "${should_bootstrap_inventory_iar}" = "true" ]; then
     fi
 else
     rm -f "${INVENTORY_STARTUP_FILE}"
-    printf '[init] Existing region rows detected; skipping automatic IAR import.\n'
+    printf '[init] Target user already exists (or bot-user bootstrap disabled); skipping automatic IAR import.\n'
 fi
   
  rm -f "${MERGED_STARTUP_FILE}"
