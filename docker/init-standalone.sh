@@ -219,10 +219,9 @@ if [ "$(printf '%s' "${OPENSIM_CREATE_BOT_USER}" | tr '[:upper:]' '[:lower:]')" 
             should_add_bot_create_command="true"
         fi
     else
-        # During first-time init before schema creation, only add create-user command if bootstrap is also running.
-        if [ "${should_bootstrap_region_oar}" = "true" ]; then
-            should_add_bot_create_command="true"
-        fi
+        # During first-time init before schema creation, always add the create-user command.
+        # Region OAR bootstrap state can be false even on fresh installs once template region ini files exist.
+        should_add_bot_create_command="true"
 
         # Schema not initialized yet: treat user as not yet existing for bootstrap planning.
         bot_user_exists="false"
