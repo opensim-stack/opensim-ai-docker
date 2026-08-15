@@ -264,7 +264,7 @@ Bot bootstrap behavior:
 
 Prompt bootstrap behavior:
 
-- This repository ships a stack-level `AGENTS.md` prompt file at project root.
+- This repository ships a stack-level `AGENTS.md` prompt file in `docker`.
 - Compose mounts that file into `opensim-metaverse2mcp` at `/app/AGENTS.md` and sets `PROMPT_PROJECT_AGENTS_FILE=/app/AGENTS.md` by default.
 - You can edit `AGENTS.md` to tune assistant behavior without rebuilding images.
 

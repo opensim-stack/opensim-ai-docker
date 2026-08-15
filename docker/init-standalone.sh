@@ -65,15 +65,6 @@ sql_escape() {
     printf "%s" "$1" | sed "s/'/''/g"
 }
 
-count_region_ini_files() {
-    if [ ! -d "$1" ]; then
-        printf '0'
-        return
-    fi
-
-    find "$1" -maxdepth 1 -type f -name '*.ini' | wc -l | tr -d ' '
-}
-
 printf '[init] Waiting for MariaDB at %s...\n' "${MARIADB_HOST}"
 attempts=0
 until mariadb-admin ping -h "${MARIADB_HOST}" -u "${MARIADB_USER}" "--password=${MARIADB_PASSWORD}" --silent 2>/dev/null; do
@@ -87,11 +78,6 @@ done
 printf '[init] MariaDB is ready.\n'
 
 mkdir -p "${WORKSPACE_DIR}" "${CONFIG_DIR}"
-
-#
-# TODO deal with below file by file so any can be deleted, but others
-# are left alone. For now, just copy everything from the templates directory to the config directory if the config directory is empty.
-# 
 
 # If config directory is empty, copy default configs from templates.
 if [ -z "$(find ${CONFIG_DIR} -mindepth 1 -maxdepth 1)" ]; then
@@ -138,39 +124,34 @@ if [ -z "$(find ${CONFIG_DIR} -mindepth 1 -maxdepth 1)" ]; then
 fi
 
 should_bootstrap_region_oar="false"
-existing_region_ini_count="$(count_region_ini_files "${CONFIG_DIR}/Regions")"
-
-regions_table_exists="$(mariadb -N -B \
+region_count="0"
+regionsettings_table_exists="$(mariadb -N -B \
     -h "${MARIADB_HOST}" \
     -u "${MARIADB_USER}" \
     "--password=${MARIADB_PASSWORD}" \
-    -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${MARIADB_DATABASE}' AND table_name='regions';" \
-    2>/dev/null || printf '0')"
+    -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${MARIADB_DATABASE}' AND LOWER(table_name)='regionsettings';")"
 
-if [ "${regions_table_exists}" -gt 0 ]; then
+if [ "${regionsettings_table_exists}" -gt 0 ]; then
     region_count="$(mariadb -N -B \
         -h "${MARIADB_HOST}" \
         -u "${MARIADB_USER}" \
         "--password=${MARIADB_PASSWORD}" \
         "${MARIADB_DATABASE}" \
-        -e "SELECT COUNT(*) FROM regions;" \
-        2>/dev/null || printf '0')"
-    if [ "${region_count}" -eq 0 ] && [ "${existing_region_ini_count}" -eq 0 ]; then
+        -e "SELECT COUNT(*) FROM regionsettings;")"
+    if [ "${region_count}" -eq 0 ]; then
         should_bootstrap_region_oar="true"
     fi
 else
-    # If schema is not initialized yet, only bootstrap if there are also no region definitions.
-    if [ "${existing_region_ini_count}" -eq 0 ]; then
-        should_bootstrap_region_oar="true"
-    fi
+    # Schema is not initialized yet; allow bootstrap command generation.
+    should_bootstrap_region_oar="true"
 fi
 
 if [ "${should_bootstrap_region_oar}" = "true" ]; then
-    printf '[init] No existing regions detected (db rows=%s, region ini files=%s); bootstrap import is enabled.\n' \
-        "${region_count:-0}" "${existing_region_ini_count}"
+    printf '[init] No existing regions detected (db rows=%s); bootstrap import is enabled.\n' \
+        "${region_count:-0}"
 else
-    printf '[init] Existing region data detected (db rows=%s, region ini files=%s); bootstrap import is disabled.\n' \
-        "${region_count:-0}" "${existing_region_ini_count}"
+    printf '[init] Existing region data detected (db rows=%s); bootstrap import is disabled.\n' \
+        "${region_count:-0}"
 fi
 
 touch "${BOT_STARTUP_FILE}"
@@ -256,13 +237,20 @@ if [ "${should_bootstrap_region_oar}" = "true" ]; then
     if [ -f "${DEFAULT_OAR_FILE}" ]; then
         {
             printf '# opensim-ai-docker region bootstrap begin\n'
-            printf 'load oar "%s"\n' "${DEFAULT_OAR_FILE}"
+            printf 'create region "%s" %s %s\n' "${OPENSIM_REGION_NAME}" "${OPENSIM_REGION_X}" "${OPENSIM_REGION_Y}"
+            if [ -f "${DEFAULT_OAR_FILE}" ]; then
+                printf 'load oar "%s"\n' "${DEFAULT_OAR_FILE}"
+            fi
             printf '# opensim-ai-docker region bootstrap end\n'
         } > "${REGION_STARTUP_FILE}"
         printf '[init] Added startup command to import default region OAR %s.\n' "${DEFAULT_OAR_FILE}"
     else
-        rm -f "${REGION_STARTUP_FILE}"
-        printf '[init] WARNING: Default OAR file not found at %s; skipping automatic OAR import.\n' "${DEFAULT_OAR_FILE}" >&2
+        {
+            printf '# opensim-ai-docker region bootstrap begin\n'
+            printf 'create region "%s" %s %s\n' "${OPENSIM_REGION_NAME}" "${OPENSIM_REGION_X}" "${OPENSIM_REGION_Y}"
+            printf '# opensim-ai-docker region bootstrap end\n'
+        } > "${REGION_STARTUP_FILE}"
+        printf '[init] WARNING: Default OAR file not found at %s; injecting create-region command only.\n' "${DEFAULT_OAR_FILE}" >&2
     fi
 else
     rm -f "${REGION_STARTUP_FILE}"

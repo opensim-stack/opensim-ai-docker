@@ -131,7 +131,7 @@ services:
       PROMPT_PROJECT_AGENTS_FILE: "${PROMPT_PROJECT_AGENTS_FILE:-/app/AGENTS.md}"
       PROMPT_NOTECARD_REQUIRE_HANDLER: "${PROMPT_NOTECARD_REQUIRE_HANDLER:-true}"
     volumes:
-      - ./AGENTS.md:/app/AGENTS.md:ro
+      - ./docker/AGENTS.md:/app/AGENTS.md:ro
       - opensim-config:/config
       - opensim-workspace:/workspace
     ports:

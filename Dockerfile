@@ -71,7 +71,8 @@ ENTRYPOINT ["/opt/opensim/docker/entrypoint.sh"]
 # -----------------------------
 FROM runtime-base AS release-runtime
 
-ARG OPENSIM_RELEASE_URL=http://opensimulator.org/dist/opensim-0.9.3.0.tar.gz
+ARG OPENSIM_RELEASE_REF=r78cb44c
+ARG OPENSIM_RELEASE_URL=https://github.com/opensim/opensim/releases/download/${OPENSIM_RELEASE_REF}/LastDotNetBuild.zip
 
 RUN set -eux; \
     mkdir -p /tmp/pkg /tmp/extract /opt/opensim/bin; \
@@ -96,5 +97,3 @@ RUN mkdir -p \
 
 EXPOSE 9000/tcp 9000/udp
 ENTRYPOINT ["/opt/opensim/docker/entrypoint.sh"]
-
-
