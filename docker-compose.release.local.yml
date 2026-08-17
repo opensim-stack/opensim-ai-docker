@@ -4,7 +4,7 @@ services:
       context: .
       target: release-runtime
       args:
-        OPENSIM_RELEASE_URL: "${OPENSIM_RELEASE_URL:-http://opensimulator.org/dist/opensim-0.9.3.0.tar.gz}"
+        OPENSIM_RELEASE_URL: "${OPENSIM_RELEASE_URL:-https://github.com/opensim/opensim/releases/download/${OPENSIM_RELEASE_REF:-r78cb44c}/LastDotNetBuild.zip}"
     image: "${OPENSIM_RELEASE_IMAGE:-opensim-ai-standalone:latest}"
 
   opensim:
@@ -12,7 +12,7 @@ services:
       context: .
       target: release-runtime
       args:
-        OPENSIM_RELEASE_URL: "${OPENSIM_RELEASE_URL:-http://opensimulator.org/dist/opensim-0.9.3.0.tar.gz}"
+        OPENSIM_RELEASE_URL: "${OPENSIM_RELEASE_URL:-https://github.com/opensim/opensim/releases/download/${OPENSIM_RELEASE_REF:-r78cb44c}/LastDotNetBuild.zip}"
     image: "${OPENSIM_RELEASE_IMAGE:-opensim-ai-standalone:latest}"
 
   opensim-opencode:
@@ -34,3 +34,8 @@ services:
     build:
       context: ../opensim-blender
     image: "${OPENSIM_BLENDER_IMAGE:-opensim-blender:latest}"
+
+  opensim-piper:
+    build:
+      context: ../opensim-piper
+    image: "${OPENSIM_PIPER_IMAGE:-opensim-piper:latest}"

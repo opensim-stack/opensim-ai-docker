@@ -1,0 +1,65 @@
+diff --git a/Janus/JanusMessages.cs b/Janus/JanusMessages.cs
+index ee5f91c..e6159f5 100644
+--- a/Janus/JanusMessages.cs
++++ b/Janus/JanusMessages.cs
+@@ -131,6 +131,19 @@ namespace WebRtcVoice
+                 case OSDType.Integer:
+                     ret = (long)(pIn as OSDInteger).AsInteger();
+                     break;
++                case OSDType.String:
++                    {
++                        var text = pIn.AsString();
++                        if (long.TryParse(text, out long parsedLong))
++                        {
++                            ret = parsedLong;
++                        }
++                        else if (ulong.TryParse(text, out ulong parsedULong) && parsedULong <= long.MaxValue)
++                        {
++                            ret = (long)parsedULong;
++                        }
++                    }
++                    break;
+                 case OSDType.Binary:
+                     byte[] value = (pIn as OSDBinary).value;
+                     if (value.Length == 4)
+@@ -152,6 +165,16 @@ namespace WebRtcVoice
+                         ret = pIn.AsLong();
+                     }
+                     break;
++                default:
++                    try
++                    {
++                        ret = pIn.AsLong();
++                    }
++                    catch
++                    {
++                        ret = 0;
++                    }
++                    break;
+             }
+             return ret;
+         }
+@@ -302,6 +325,9 @@ namespace WebRtcVoice
+         {
+             get
+             {
++                if (dataSection is null)
++                    return string.Empty;
++
+                 // The JSON response gives a long number (not a string)
+                 //    and the ODMap conversion interprets it as a long (OSDLong).
+                 // If one just does a "ToString()" on the OSD object, you
+@@ -438,8 +464,12 @@ namespace WebRtcVoice
+     {
+         public OSDMap m_pluginData;
+         public OSDMap m_data;
+-        public PluginMsgResp(JanusMessageResp pResp) : base(pResp.RawBody)
++        public PluginMsgResp(JanusMessageResp pResp) : base(pResp is not null ? pResp.RawBody : new OSDMap())
+         {
++            if (m_message is null)
++            {
++                m_message = new OSDMap();
++            }
+             if (m_message is not null && m_message.ContainsKey("plugindata"))
+             {
+                 // Move the plugin data up into the m_data var so it is easier to get to

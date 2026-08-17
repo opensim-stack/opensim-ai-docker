@@ -49,6 +49,14 @@ services:
       OPENSIM_LOGIN_EMAIL: "${OPENSIM_LOGIN_EMAIL:-bot@example.com}"
       OPENSIM_LOGIN_UUID: "${OPENSIM_LOGIN_UUID:-}"
       OPENSIM_LOGIN_MODEL: "${OPENSIM_LOGIN_MODEL:-Ruth}"
+      OPENSIM_WEBRTC_VOICE_ENABLED: "${OPENSIM_WEBRTC_VOICE_ENABLED:-true}"
+      OPENSIM_JANUS_PUBLIC_HOST: "${OPENSIM_JANUS_PUBLIC_HOST:-${OPENSIM_HOSTNAME:-opensim}}"
+      JANUS_HTTP_PORT: "${JANUS_HTTP_PORT:-14223}"
+      JANUS_HTTP_BASEPATH: "${JANUS_HTTP_BASEPATH:-/voice}"
+      JANUS_HTTP_ADMIN_PORT: "${JANUS_HTTP_ADMIN_PORT:-14225}"
+      JANUS_HTTP_ADMIN_BASEPATH: "${JANUS_HTTP_ADMIN_BASEPATH:-/voiceAdmin}"
+      JANUS_API_TOKEN: "${JANUS_API_TOKEN:-change-me-api-token}"
+      JANUS_ADMIN_TOKEN: "${JANUS_ADMIN_TOKEN:-change-me-admin-token}"
       MARIADB_HOST: "${MARIADB_HOST:-${MYSQL_HOST:-mariadb}}"
       MARIADB_DATABASE: "${MARIADB_DATABASE:-${MYSQL_DATABASE:-opensim}}"
       MARIADB_USER: "${MARIADB_USER:-${MYSQL_USER:-opensim}}"
@@ -74,6 +82,53 @@ services:
       - "${OPENSIM_REGION_PORT:-9000}:9000/udp"
     depends_on:
       opensim-init:
+        condition: service_completed_successfully
+      opensim-janus:
+        condition: service_healthy
+
+  opensim-janus-init:
+    image: "${OPENSIM_JANUS_IMAGE:-misterblue/os-webrtc-janus-docker:latest}"
+    entrypoint: ["/bin/sh", "/scripts/janus-init.sh"]
+    restart: "no"
+    pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
+    environment:
+      JANUS_SERVER_NAME: "${JANUS_SERVER_NAME:-GridVoice}"
+      JANUS_HTTP_ENABLE: "${JANUS_HTTP_ENABLE:-true}"
+      JANUS_HTTP_PORT: "${JANUS_HTTP_PORT:-14223}"
+      JANUS_HTTP_BASEPATH: "${JANUS_HTTP_BASEPATH:-/voice}"
+      JANUS_HTTPS_ENABLE: "${JANUS_HTTPS_ENABLE:-false}"
+      JANUS_HTTPS_PORT: "${JANUS_HTTPS_PORT:-14224}"
+      JANUS_HTTP_ADMIN_ENABLE: "${JANUS_HTTP_ADMIN_ENABLE:-true}"
+      JANUS_HTTP_ADMIN_PORT: "${JANUS_HTTP_ADMIN_PORT:-14225}"
+      JANUS_HTTP_ADMIN_BASEPATH: "${JANUS_HTTP_ADMIN_BASEPATH:-/voiceAdmin}"
+      JANUS_API_TOKEN: "${JANUS_API_TOKEN:-change-me-api-token}"
+      JANUS_ADMIN_TOKEN: "${JANUS_ADMIN_TOKEN:-change-me-admin-token}"
+    volumes:
+      - ./docker/janus-init.sh:/scripts/janus-init.sh:ro
+      - opensim-janus-config:/janus-config
+
+  opensim-janus:
+    image: "${OPENSIM_JANUS_IMAGE:-misterblue/os-webrtc-janus-docker:latest}"
+    restart: unless-stopped
+    pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
+    ports:
+      - "${JANUS_HTTP_PORT:-14223}:${JANUS_HTTP_PORT:-14223}/tcp"
+      - "${JANUS_HTTP_ADMIN_PORT:-14225}:${JANUS_HTTP_ADMIN_PORT:-14225}/tcp"
+      - "${JANUS_UDP_RTP_MIN:-10000}-${JANUS_UDP_RTP_MAX:-10200}:${JANUS_UDP_RTP_MIN:-10000}-${JANUS_UDP_RTP_MAX:-10200}/udp"
+    volumes:
+      - opensim-janus-config:/opt/janus/etc/janus
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "if command -v curl >/dev/null 2>&1; then curl -fsS \"http://127.0.0.1:${JANUS_HTTP_PORT:-14223}${JANUS_HTTP_BASEPATH:-/voice}/info\" >/dev/null; elif command -v wget >/dev/null 2>&1; then wget -qO- \"http://127.0.0.1:${JANUS_HTTP_PORT:-14223}${JANUS_HTTP_BASEPATH:-/voice}/info\" >/dev/null; else exit 1; fi",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 24
+      start_period: 15s
+    depends_on:
+      opensim-janus-init:
         condition: service_completed_successfully
 
   opensim-console2mcp:
@@ -130,6 +185,15 @@ services:
       PROMPT_PROJECT_AGENTS_ENABLED: "${PROMPT_PROJECT_AGENTS_ENABLED:-true}"
       PROMPT_PROJECT_AGENTS_FILE: "${PROMPT_PROJECT_AGENTS_FILE:-/app/AGENTS.md}"
       PROMPT_NOTECARD_REQUIRE_HANDLER: "${PROMPT_NOTECARD_REQUIRE_HANDLER:-true}"
+      VOICE_ROUTING_ENABLED: "${VOICE_ROUTING_ENABLED:-true}"
+      VOICE_BACKEND: "${VOICE_BACKEND:-webrtc}"
+      PIPER_SCHEME: "${PIPER_SCHEME:-http}"
+      PIPER_HOST: "${PIPER_HOST:-opensim-piper}"
+      PIPER_PORT: "${PIPER_PORT:-8995}"
+      PIPER_TTS_PATH: "${PIPER_TTS_PATH:-/tts}"
+      PIPER_VOICES_PATH: "${PIPER_VOICES_PATH:-/voices}"
+      PIPER_REQUEST_TIMEOUT_SECONDS: "${PIPER_REQUEST_TIMEOUT_SECONDS:-60}"
+      PIPER_DEFAULT_VOICE: "${PIPER_DEFAULT_VOICE:-en_US-lessac-medium}"
     volumes:
       - ./docker/AGENTS.md:/app/AGENTS.md:ro
       - opensim-config:/config
@@ -139,6 +203,8 @@ services:
     depends_on:
       opensim:
         condition: service_started
+      opensim-janus:
+        condition: service_healthy
 
   opensim-blender:
     image: "${OPENSIM_BLENDER_IMAGE:-bithatch/opensim-blender:latest}"
@@ -162,6 +228,20 @@ services:
       opensim-opencode-init:
         condition: service_completed_successfully
 
+  opensim-piper:
+    image: "${OPENSIM_PIPER_IMAGE:-bithatch/opensim-piper:latest}"
+    restart: unless-stopped
+    pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
+    environment:
+      PIPER_HTTP_HOST: "${PIPER_HTTP_HOST:-0.0.0.0}"
+      PIPER_HTTP_PORT: "${PIPER_HTTP_PORT:-8995}"
+      PIPER_DEFAULT_VOICE: "${PIPER_DEFAULT_VOICE:-en_US-lessac-medium}"
+      PIPER_TIMEOUT_SECONDS: "${PIPER_TIMEOUT_SECONDS:-60}"
+    volumes:
+      - piper-voices:/voices
+    ports:
+      - "${PIPER_HTTP_PORT:-8995}:8995/tcp"
+
   opensim-opencode-init:
     image: alpine:3.22
     restart: "no"
@@ -170,6 +250,7 @@ services:
       OPENCODE_MCP_URL: "${OPENCODE_MCP_URL:-http://opensim-console2mcp:8997/mcp}"
       OPENCODE_METAVERSE_MCP_URL: "${OPENCODE_METAVERSE_MCP_URL:-http://opensim-metaverse2mcp:8999/mcp}"
       OPENCODE_BLENDER_MCP_URL: "${OPENCODE_BLENDER_MCP_URL:-http://opensim-blender:8996/mcp}"
+      OPENCODE_PIPER_URL: "${OPENCODE_PIPER_URL:-http://opensim-piper:8995}"
     command:
       - /bin/sh
       - -ec
@@ -227,6 +308,11 @@ services:
               "type": "remote",
               "url": "${OPENCODE_BLENDER_MCP_URL:-http://opensim-blender:8996/mcp}",
               "enabled": true
+            },
+            "piper_http": {
+              "type": "remote",
+              "url": "${OPENCODE_PIPER_URL:-http://opensim-piper:8995}",
+              "enabled": true
             }
           }
         }
@@ -262,6 +348,8 @@ services:
         condition: service_started
       opensim-blender:
         condition: service_started
+      opensim-piper:
+        condition: service_started
 
 volumes:
   opensim-mariadb:
@@ -277,3 +365,5 @@ volumes:
   blender-config:
   blender-cache:
   blender-data:
+  piper-voices:
+  opensim-janus-config:

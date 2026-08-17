@@ -78,6 +78,15 @@ You can  choose a different model and/or provider. For example, to hook up to Gi
 cp .env.example .env
 ```
 
+### 1) Generate one-off Janus API tokens
+
+The Janus gateway and OpenSimulator WebRTC module must share the same tokens.
+Generate and write them into `.env` once:
+
+```bash
+./generate-janus-tokens.sh
+```
+
 ### Optional launcher scripts
 
 The project includes helper scripts that run the correct compose command for each mode:
@@ -93,6 +102,7 @@ By default, compose files use published images via these variables:
 - `OPENSIM_RELEASE_IMAGE` (default `bithatch/opensim-ai-standalone:latest`)
 - `OPENSIM_METAVERSE2MCP_IMAGE` (default `bithatch/opensim-metaverse2mcp:latest`)
 - `OPENSIM_BLENDER_IMAGE` (default `bithatch/opensim-blender:latest`)
+- `OPENSIM_JANUS_IMAGE` (default `misterblue/os-webrtc-janus-docker:latest`)
 
 The helper scripts use local override compose files (`docker-compose.*.local.yml`) to
 build and run local images with the current local tags.
@@ -111,11 +121,14 @@ through `./run.sh` using `docker-compose.local.yml`.
 When building locally, it clones from:
 
 - git://opensimulator.org/git/opensim
+- https://github.com/Misterblue/os-webrtc-janus.git (addon module)
 
 You can override clone URL/ref via `.env`:
 
 - OPENSIM_GIT_URL
 - OPENSIM_GIT_REF
+- OS_WEBRTC_JANUS_GIT_URL
+- OS_WEBRTC_JANUS_GIT_REF
 
 Run:
 
@@ -141,9 +154,12 @@ When building locally, OpenSim binaries come from an official download archive.
 
 Default URL in `.env.example`:
 
-- http://opensimulator.org/dist/opensim-0.9.3.0.tar.gz
+- https://github.com/opensim/opensim/releases/download/${OPENSIM_RELEASE_REF}/LastDotNetBuild.zip
 
-You may switch to zip/tar.gz by setting `OPENSIM_RELEASE_URL`.
+Release defaults are split into:
+
+- `OPENSIM_RELEASE_REF` (default `r78cb44c`)
+- `OPENSIM_RELEASE_URL` (optional override; when blank, compose uses the GitHub release URL built from `OPENSIM_RELEASE_REF`)
 
 Run:
 
@@ -196,6 +212,25 @@ Volume mappings:
 The shared workspace lets Opencode and Blender exchange project files. Models can
 be exported from Blender as glTF (`.glb`/`.gltf`) and then uploaded into the
 OpenSim world via the metaverse bot.
+
+## Janus WebRTC Voice Gateway (opensim-janus)
+
+This stack includes a Janus sidecar (`opensim-janus`) for OpenSimulator WebRTC voice.
+An init service (`opensim-janus-init`) prepares Janus config with your token and path settings.
+
+Core variables:
+
+- `OPENSIM_JANUS_IMAGE`
+- `JANUS_API_TOKEN`
+- `JANUS_ADMIN_TOKEN`
+- `JANUS_HTTP_PORT` (default `14223`)
+- `JANUS_HTTP_BASEPATH` (default `/voice`)
+- `JANUS_HTTP_ADMIN_PORT` (default `14225`)
+- `JANUS_HTTP_ADMIN_BASEPATH` (default `/voiceAdmin`)
+- `OPENSIM_JANUS_PUBLIC_HOST` (hostname/IP viewers can reach)
+- `OPENSIM_WEBRTC_VOICE_ENABLED` (`true`/`false`)
+
+OpenSimulator config is generated at init time in `config-include/os-webrtc-janus.ini` and points to your Janus service using the same API/admin tokens.
 
 ## OpenSim Metaverse MCP Server (opensim-metaverse2mcp)
 
@@ -419,7 +454,8 @@ docker push bithatch/opensim-ai-standalone:dev-${TAG_DATE}
 ```bash
 docker build \
   --target release-runtime \
-  --build-arg OPENSIM_RELEASE_URL=http://opensimulator.org/dist/opensim-0.9.3.0.tar.gz \
+  --build-arg OPENSIM_RELEASE_REF=r78cb44c \
+  --build-arg OPENSIM_RELEASE_URL=https://github.com/opensim/opensim/releases/download/r78cb44c/LastDotNetBuild.zip \
   -t bithatch/opensim-ai-standalone:latest \
   -t bithatch/opensim-ai-standalone:${TAG_DATE} \
   .
