@@ -6,8 +6,6 @@ services:
       args:
         OPENSIM_GIT_URL: "${OPENSIM_GIT_URL:-git://opensimulator.org/git/opensim}"
         OPENSIM_GIT_REF: "${OPENSIM_GIT_REF:-master}"
-        OS_WEBRTC_JANUS_GIT_URL: "${OS_WEBRTC_JANUS_GIT_URL:-https://github.com/Misterblue/os-webrtc-janus.git}"
-        OS_WEBRTC_JANUS_GIT_REF: "${OS_WEBRTC_JANUS_GIT_REF:-main}"
     image: "${OPENSIM_SOURCE_IMAGE:-opensim-ai-standalone:dev}"
 
   opensim:
@@ -17,8 +15,6 @@ services:
       args:
         OPENSIM_GIT_URL: "${OPENSIM_GIT_URL:-git://opensimulator.org/git/opensim}"
         OPENSIM_GIT_REF: "${OPENSIM_GIT_REF:-master}"
-        OS_WEBRTC_JANUS_GIT_URL: "${OS_WEBRTC_JANUS_GIT_URL:-https://github.com/Misterblue/os-webrtc-janus.git}"
-        OS_WEBRTC_JANUS_GIT_REF: "${OS_WEBRTC_JANUS_GIT_REF:-main}"
     image: "${OPENSIM_SOURCE_IMAGE:-opensim-ai-standalone:dev}"
 
   opensim-opencode:

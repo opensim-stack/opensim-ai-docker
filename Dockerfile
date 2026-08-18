@@ -7,8 +7,6 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS source-build
 
 ARG OPENSIM_GIT_URL=git://opensimulator.org/git/opensim
 ARG OPENSIM_GIT_REF=master
-ARG OS_WEBRTC_JANUS_GIT_URL=https://github.com/Misterblue/os-webrtc-janus.git
-ARG OS_WEBRTC_JANUS_GIT_REF=main
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -19,14 +17,7 @@ RUN apt-get update && \
 
 WORKDIR /src
 
-COPY docker/patches/os-webrtc-janus-sessionid-hotfix.patch /tmp/os-webrtc-janus-sessionid-hotfix.patch
-
 RUN git clone --depth 1 --branch "${OPENSIM_GIT_REF}" "${OPENSIM_GIT_URL}" opensim
-
-RUN mkdir -p /src/opensim/addon-modules && \
-    git clone --depth 1 --branch "${OS_WEBRTC_JANUS_GIT_REF}" "${OS_WEBRTC_JANUS_GIT_URL}" /src/opensim/addon-modules/os-webrtc-janus
-
-RUN git -C /src/opensim/addon-modules/os-webrtc-janus apply /tmp/os-webrtc-janus-sessionid-hotfix.patch
 
 WORKDIR /src/opensim
 

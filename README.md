@@ -121,14 +121,14 @@ through `./run.sh` using `docker-compose.local.yml`.
 When building locally, it clones from:
 
 - git://opensimulator.org/git/opensim
-- https://github.com/Misterblue/os-webrtc-janus.git (addon module)
+
+The WebRTC voice module is expected to come from OpenSimulator core.
+This stack no longer performs a separate addon-module clone step.
 
 You can override clone URL/ref via `.env`:
 
 - OPENSIM_GIT_URL
 - OPENSIM_GIT_REF
-- OS_WEBRTC_JANUS_GIT_URL
-- OS_WEBRTC_JANUS_GIT_REF
 
 Run:
 
