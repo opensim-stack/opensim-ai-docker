@@ -30,8 +30,8 @@ This is done by integrating [opensim-console2mcp](https://github.com/opensim-sta
 
  1. Install the entire Opensim AI stack using Docker Compose. I recommend starting with [docker-compose.release.yml](docker-compose.release.yml). Use [.env.example](.env.example) for the basis of your environment variables. Hopefully your Docker front end will just let you copy the  whole lot in one go! ([Arcane](https://getarcane.app/) does). However, you **MUST** set at least `OPENSIM_HOSTNAME` or it will not work on anything other than `localhost``.
  2. Configure the AI provider and model. [TODO - AI configuration](ai-configuration)
- 2. Get yourself an Opensimulator viewer, I recommend [Firestorm](https://www.firestormviewer.org/). Connect to your new personal Grid using `Admin User` and `changeme` (assuming you haven't changed `OPENSIM_ESTATE_OWNER_FIRST`, `OPENSIM_ESTATE_OWNER_FIRST` or `OPENSIM_ESTATE_OWNER_PASSWORD`).
- 3. When you login, you will see `Bot User` standing near you. Start an IM conversation with them, and give them an instruction, e.g. 
+ 2. Get yourself an Opensimulator viewer, I recommend [Firestorm](https://www.firestormviewer.org/). Connect to your new personal Grid using `Bot Handler` and `changeme` (assuming you haven't changed `OPENSIM_ESTATE_OWNER_FIRST`, `OPENSIM_ESTATE_OWNER_FIRST` or `OPENSIM_ESTATE_OWNER_PASSWORD`).
+ 3. When you login, you will see `Governor Bot` standing near you. Start an IM conversation with them, and give them an instruction, e.g. 
  
  ```
  Place a cube prim 2 meters away and scale it x2. 
@@ -258,23 +258,20 @@ The metaverse MCP sidecar uses these environment variables:
 - `METAVERSE_MCP_HTTP_BEARER_TOKEN`
 - `METAVERSE_MCP_HTTP_DISALLOW_DELETE`
 - `METAVERSE_MCP_DIAGNOSTICS`
+- `OPENSIM_LOGIN_TIMEOUT_SECONDS`
 - `OPENSIM_LOGIN_FIRSTNAME`
 - `OPENSIM_LOGIN_LASTNAME`
-- `OPENSIM_LOGIN_PASSWORD`
 - `OPENSIM_LOGIN_URI`
 - `OPENSIM_LOGIN_START`
-- `BOT_LOGIN_TIMEOUT_SECONDS`
-- `OPENCODE_CHAT_ENABLED`
 - `OPENCODE_SCHEME`
 - `OPENCODE_CHAT_HOST` (mapped to `OPENCODE_HOST` inside `opensim-metaverse2mcp`)
 - `OPENCODE_CHAT_PORT` (mapped to `OPENCODE_PORT` inside `opensim-metaverse2mcp`)
-- `OPENCODE_USERNAME`
-- `OPENCODE_PASSWORD` (falls back to `OPENCODE_SERVER_PASSWORD`)
+- `OPENCODE_SERVER_USERNAME`
 - `OPENCODE_INITIAL_PROVIDER` (optional startup default provider for IM conversations; runtime-overridable)
 - `OPENCODE_INITIAL_MODEL` (optional startup default model for IM conversations; runtime-overridable)
 - `OPENCODE_REQUEST_TIMEOUT_SECONDS`
-- `OPENCODE_HANDLER_FIRSTNAME` (optional; defaults to `OPENSIM_ESTATE_OWNER_FIRST`)
-- `OPENCODE_HANDLER_LASTNAME` (optional; defaults to `OPENSIM_ESTATE_OWNER_LAST`)
+- `OPENSIM_BOT_HANDLER_FIRSTNAME` (optional; defaults to `OPENSIM_ESTATE_OWNER_FIRST`)
+- `OPENSIM_BOT_HANDLER_LASTNAME` (optional; defaults to `OPENSIM_ESTATE_OWNER_LAST`)
 - `OPENCODE_LSL_DIALOG_BRIDGE_TRUSTED_OWNER_ID` (optional; trusted bridge object owner UUID)
 - `OPENCODE_LSL_DIALOG_BRIDGE_TRUSTED_OBJECT_ID` (optional; trusted bridge object UUID)
 - `OPENCODE_LSL_DIALOG_BRIDGE_REQUIRE_TRUSTED_SENDER` (`true`/`false`, default: `true`)
@@ -291,11 +288,10 @@ Bot bootstrap behavior:
 
 - `OPENSIM_CREATE_BOT_USER=true` adds a startup console command that creates the
   bot user using `OPENSIM_LOGIN_FIRSTNAME`, `OPENSIM_LOGIN_LASTNAME`,
-  `OPENSIM_LOGIN_PASSWORD`, `OPENSIM_LOGIN_EMAIL`, `OPENSIM_LOGIN_UUID`, and
-  `OPENSIM_LOGIN_MODEL`.
+  `OPENSIM_LOGIN_EMAIL`, and`OPENSIM_LOGIN_MODEL`.
 - If `OPENSIM_LOGIN_UUID` is blank, init generates a UUID automatically.
 - Set `OPENSIM_LOGIN_MODEL` to `""` if you want an empty model/avatar template.
-- Handler behavior: by default, the metaverse bot only accepts IM instructions from the estate owner name (`OPENSIM_ESTATE_OWNER_FIRST` + `OPENSIM_ESTATE_OWNER_LAST`) unless you override `OPENCODE_HANDLER_FIRSTNAME` / `OPENCODE_HANDLER_LASTNAME`.
+- Handler behavior: by default, the metaverse bot only accepts IM instructions from the estate owner name (`OPENSIM_ESTATE_OWNER_FIRST` + `OPENSIM_ESTATE_OWNER_LAST`) unless you override `OPENSIM_BOT_HANDLER_FIRSTNAME` / `OPENSIM_BOT_HANDLER_LASTNAME`.
 
 Prompt bootstrap behavior:
 
@@ -314,9 +310,9 @@ This project uses the published Docker image
 
 The MCP server uses these environment variables:
 
-- `MCP_TRANSPORT` (`http`, `sse`, or `stdio`)
-- `MCP_HOST`
-- `MCP_PORT`
+- `CONSOLE_MCP_TRANSPORT` (`http`, `sse`, or `stdio`)
+- `CONSOLE_MCP_HOST`
+- `CONSOLE_MCP_PORT`
 - `OPENSIM_CONSOLE_URL`
 - `OPENSIM_CONSOLE_USER`
 - `OPENSIM_CONSOLE_PASS`
@@ -344,7 +340,6 @@ Defaults:
 - Blender MCP endpoint URL for Opencode: `http://opensim-blender:8996/mcp` (`OPENCODE_BLENDER_MCP_URL`)
 - MCP auth: none by default
 - Host bind: `0.0.0.0` (`OPENCODE_HOST`)
-- Server password pass-through: `OPENCODE_SERVER_PASSWORD`
 - Project directory: `/workspace` (`OPENCODE_PROJECT_DIR`)
 
 At startup, an init container writes `opencode.json` into the shared workspace

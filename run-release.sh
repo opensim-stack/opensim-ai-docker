@@ -12,6 +12,16 @@ fi
 
 export OPENSIM_RELEASE_IMAGE="${OPENSIM_RELEASE_IMAGE:-opensim-ai-standalone:latest}"
 
+if [ "${1:-}" = "--local" ] ; then
+    shift
+    export OPENSIM_OPENCODE_IMAGE=opensim-opencode:local
+    export OPENSIM_PIPER_IMAGE=opensim-piper:local
+    export OPENSIM_BLENDER_IMAGE=opensim-blender:local
+    export OPENSIM_METAVERSE2MCP_IMAGE=opensim-metaverse2mcp:local
+    export OPENSIM_SPAWNER_IMAGE=opensim-spawner:local
+    export OPENSIM_CONSOLE2MCP_IMAGE=opensim-console2mcp:local
+fi
+
 exec docker compose \
   -f docker-compose.release.yml \
   -f docker-compose.release.local.yml \

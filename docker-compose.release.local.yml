@@ -1,41 +1,31 @@
 services:
-  opensim-init:
-    build:
-      context: .
-      target: release-runtime
-      args:
-        OPENSIM_RELEASE_URL: "${OPENSIM_RELEASE_URL:-https://github.com/opensim/opensim/releases/download/${OPENSIM_RELEASE_REF:-r78cb44c}/LastDotNetBuild.zip}"
-    image: "${OPENSIM_RELEASE_IMAGE:-opensim-ai-standalone:latest}"
+    opensim-init:
+        build:
+            context: .
+            target: release-runtime
+            args:
+                OPENSIM_RELEASE_URL: "${OPENSIM_RELEASE_URL:-https://github.com/opensim/opensim/releases/download/${OPENSIM_RELEASE_REF:-r78cb44c}/LastDotNetBuild.zip}"
+        image: "${OPENSIM_RELEASE_IMAGE:-opensim-ai-standalone:latest}"
 
-  opensim:
-    build:
-      context: .
-      target: release-runtime
-      args:
-        OPENSIM_RELEASE_URL: "${OPENSIM_RELEASE_URL:-https://github.com/opensim/opensim/releases/download/${OPENSIM_RELEASE_REF:-r78cb44c}/LastDotNetBuild.zip}"
-    image: "${OPENSIM_RELEASE_IMAGE:-opensim-ai-standalone:latest}"
+    opensim:
+        build:
+            context: .
+            target: release-runtime
+            args:
+                OPENSIM_RELEASE_URL: "${OPENSIM_RELEASE_URL:-https://github.com/opensim/opensim/releases/download/${OPENSIM_RELEASE_REF:-r78cb44c}/LastDotNetBuild.zip}"
+        image: "${OPENSIM_RELEASE_IMAGE:-opensim-ai-standalone:latest}"
 
-  opensim-opencode:
-    build:
-      context: ../opensim-opencode
-    image: "${OPENCODE_IMAGE:-opensim-opencode:latest}"
+    opensim-console2mcp:
+        build:
+            context: ../opensim-console2mcp
+        image: "${OPENSIM_CONSOLE2MCP_IMAGE:-opensim-console2mcp:latest}"
 
-  opensim-console2mcp:
-    build:
-      context: ../opensim-console2mcp
-    image: "${OPENSIM_CONSOLE2MCP_IMAGE:-opensim-console2mcp:latest}"
+    opensim-blender:
+        build:
+            context: ../opensim-blender
+        image: "${OPENSIM_BLENDER_IMAGE:-opensim-blender:latest}"
 
-  opensim-metaverse2mcp:
-    build:
-      context: ../opensim-metaverse2mcp
-    image: "${OPENSIM_METAVERSE2MCP_IMAGE:-opensim-metaverse2mcp:latest}"
-
-  opensim-blender:
-    build:
-      context: ../opensim-blender
-    image: "${OPENSIM_BLENDER_IMAGE:-opensim-blender:latest}"
-
-  opensim-piper:
-    build:
-      context: ../opensim-piper
-    image: "${OPENSIM_PIPER_IMAGE:-opensim-piper:latest}"
+    opensim-piper:
+        build:
+            context: ../opensim-piper
+        image: "${OPENSIM_PIPER_IMAGE:-opensim-piper:latest}"
