@@ -20,6 +20,7 @@ if [ "${1:-}" = "--local" ] ; then
     export OPENSIM_METAVERSE2MCP_IMAGE=opensim-metaverse2mcp:local
     export OPENSIM_SPAWNER_IMAGE=opensim-spawner:local
     export OPENSIM_CONSOLE2MCP_IMAGE=opensim-console2mcp:local
+    export OPENSIM_SIMULATOR_IMAGE=opensim-simulator:local
 fi
 
 exec docker compose \

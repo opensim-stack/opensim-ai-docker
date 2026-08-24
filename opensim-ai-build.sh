@@ -14,6 +14,27 @@ else
 fi
 date
 
+# Opensim Simulator
+echo "###########################################"
+echo Simulator
+echo "###########################################"
+cd "${STACK_GIT_BASE}/opensim-simulator"
+if ! docker build -t opensim-simulator:local . ; then
+    echo "$0: opensim-simulator build  failed" >&2
+    exit 1
+fi
+if [ "${PUBLISH}" = "y" ] ; then
+    if ! docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+          -t bithatch/opensim-simulator:latest \
+          -t bithatch/opensim-simulator:${TAG} \
+          --push \
+          . ; then
+        echo "$0: opensim-simulator publish failed" >&2
+        exit 1
+    fi
+fi
+
 # Piper
 echo "###########################################"
 echo Piper
@@ -170,12 +191,12 @@ if [ "${PUBLISH}" = "y" ] ; then
       --build-arg OPENSIM_RELEASE_REF=r78cb44c \
       --build-arg OPENSIM_RELEASE_URL=https://github.com/opensim/opensim/releases/download/r78cb44c/LastDotNetBuild.zip \
       -t bithatch/opensim-ai-standalone:latest \
-      -t bithatch/opensim-ai-standalone:${TAG_DATE} \
+      -t bithatch/opensim-ai-standalone:${TAG} \
       . \
       || \
       ! docker push bithatch/opensim-ai-standalone:latest \
       || \
-      ! docker push bithatch/opensim-ai-standalone:${TAG_DATE} ; then
+      ! docker push bithatch/opensim-ai-standalone:${TAG} ; then
         echo "$0: opensim-ai-standalone publish failed" >&2
         exit 1
     fi
