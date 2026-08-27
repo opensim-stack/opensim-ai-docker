@@ -29,10 +29,7 @@ services:
             start_period: 30s
 
     spawner:
-        image: "${OPENSIM_SPAWNER_IMAGE:-opensim-spawner:local}"
-        build:
-            context: ../opensim-spawner
-            dockerfile: Dockerfile
+        image: "${OPENSIM_SPAWNER_IMAGE:-bithatch/opensim-spawner:latest}"
         restart: unless-stopped
         pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
         environment:
