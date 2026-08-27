@@ -122,6 +122,16 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
         ports:
             - "${OPENSIM_SPAWNER_HTTP_PORT:-8993}:${OPENSIM_SPAWNER_HTTP_PORT:-8993}/tcp"
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    'if command -v curl >/dev/null 2>&1; then code=$$(curl -sS -o /dev/null -m 5 -w "%{http_code}" "http://${SPAWNER_HOST:-${COMPOSE_PROJECT_NAME:-opensim-ai}-spawner-1}:${OPENSIM_SPAWNER_HTTP_PORT:-8993}/"); [ "$$code" -ge 100 ] && [ "$$code" -le 599 ]; elif command -v wget >/dev/null 2>&1; then wget -q --spider -T 5 "http://${SPAWNER_HOST:-${COMPOSE_PROJECT_NAME:-opensim-ai}-spawner-1}:${OPENSIM_SPAWNER_HTTP_PORT:-8993}/"; else exit 1; fi',
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 24
+            start_period: 20s
         depends_on:
             mariadb:
                 condition: service_healthy
@@ -186,7 +196,7 @@ services:
             OPENSIM_CONSOLE_PASS: "${OPENSIM_CONSOLE_PASS:-ConsolePass}"
         depends_on:
             spawner:
-                condition: service_started
+                condition: service_healthy
 
     blender:
         image: "${OPENSIM_BLENDER_IMAGE:-bithatch/opensim-blender:latest}"
@@ -206,7 +216,7 @@ services:
             - blender-data:/root/.local/share/blender
         depends_on:
             spawner:
-                condition: service_started
+                condition: service_healthy
 
     piper:
         image: "${OPENSIM_PIPER_IMAGE:-bithatch/opensim-piper:latest}"
