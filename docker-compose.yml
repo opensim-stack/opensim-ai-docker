@@ -126,7 +126,7 @@ services:
             test:
                 [
                     "CMD-SHELL",
-                    'if command -v curl >/dev/null 2>&1; then code=$$(curl -sS -o /dev/null -m 5 -w "%{http_code}" "http://${SPAWNER_HOST:-${COMPOSE_PROJECT_NAME:-opensim-ai}-spawner-1}:${OPENSIM_SPAWNER_HTTP_PORT:-8993}/"); [ "$$code" -ge 100 ] && [ "$$code" -le 599 ]; elif command -v wget >/dev/null 2>&1; then wget -q --spider -T 5 "http://${SPAWNER_HOST:-${COMPOSE_PROJECT_NAME:-opensim-ai}-spawner-1}:${OPENSIM_SPAWNER_HTTP_PORT:-8993}/"; else exit 1; fi',
+                    'if command -v curl >/dev/null 2>&1; then curl -fsS "http://127.0.0.1:${OPENSIM_SPAWNER_HTTP_PORT:-8993}/ping" | grep -qx "pong"; elif command -v wget >/dev/null 2>&1; then wget -qO- "http://127.0.0.1:${OPENSIM_SPAWNER_HTTP_PORT:-8993}/ping" | grep -qx "pong"; else exit 1; fi',
                 ]
             interval: 10s
             timeout: 5s
