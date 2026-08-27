@@ -27,7 +27,7 @@ set x $(docker container ls -a|awk '{ print $NF }'|grep -v NAMES) ; shift
 if [ "$#" -gt 0 ]; then
     for i in $@; do
         case "$i" in
-            opensim-*)
+            opensim-ai-*)
                   echo "Removing containers: $i"
                   docker container rm -f "$i"
                 ;;
@@ -42,7 +42,7 @@ set x $(docker volume ls -q) ; shift
 if [ "$#" -gt 0 ]; then
     for i in $@; do
         case "$i" in
-            opencode-data|opencode-cache|opencode-config|opencode-state-*|opencode-tool-*|opensim-ai_*|opensim-workspace*|piper-voices)
+            opencode-data|opencode-cache|opencode-config|opencode-state-*|opencode-tool-*|opensim-ai*|opensim-workspace*|piper-voices)
                 echo "Removing volume: $i"
                 docker volume rm -f "$i"
                 ;;

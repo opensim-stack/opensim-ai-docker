@@ -1,33 +1,20 @@
 services:
-    opensim-init:
-        build:
-            context: .
-            target: source-runtime
-            args:
-                OPENSIM_GIT_URL: "${OPENSIM_GIT_URL:-git://opensimulator.org/git/opensim}"
-                OPENSIM_GIT_REF: "${OPENSIM_GIT_REF:-master}"
-        image: "${OPENSIM_SOURCE_IMAGE:-opensim-ai-standalone:dev}"
-
-    opensim:
-        build:
-            context: .
-            target: source-runtime
-            args:
-                OPENSIM_GIT_URL: "${OPENSIM_GIT_URL:-git://opensimulator.org/git/opensim}"
-                OPENSIM_GIT_REF: "${OPENSIM_GIT_REF:-master}"
-        image: "${OPENSIM_SOURCE_IMAGE:-opensim-ai-standalone:dev}"
-
-    opensim-console2mcp:
+    console2mcp:
         build:
             context: ../opensim-console2mcp
         image: "${OPENSIM_CONSOLE2MCP_IMAGE:-opensim-console2mcp:latest}"
-
-    opensim-blender:
+    
+    blender:
         build:
             context: ../opensim-blender
         image: "${OPENSIM_BLENDER_IMAGE:-opensim-blender:latest}"
-
-    opensim-piper:
+    
+    piper:
         build:
             context: ../opensim-piper
         image: "${OPENSIM_PIPER_IMAGE:-opensim-piper:latest}"
+    
+    spawner:
+        build:
+            context: ../opensim-spawner
+        image: "${OPENSIM_SPAWNER_IMAGE:-opensim-spawner:latest}"

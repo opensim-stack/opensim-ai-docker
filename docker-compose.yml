@@ -1,3 +1,8 @@
+#  __  ____  ____  __ _  ____  __  _  _       __   __    ____  ____  __    ___  __ _ 
+# /  \(  _ \(  __)(  ( \/ ___)(  )( \/ )     / _\ (  )  / ___)(_  _)/ _\  / __)(  / )
+#(  O )) __/ ) _) /    /\___ \ )( / \/ \    /    \ )(   \___ \  )( /    \( (__  )  ( 
+# \__/(__)  (____)\_)__)(____/(__)\_)(_/    \_/\_/(__)  (____/ (__)\_/\_/ \___)(__\_)
+
 services:
     mariadb:
         image: mariadb:11
@@ -23,139 +28,21 @@ services:
             retries: 12
             start_period: 30s
 
-    opensim-init:
-        image: "${OPENSIM_SOURCE_IMAGE:-bithatch/opensim-ai-standalone:dev-latest}"
-        entrypoint: ["/opt/opensim/docker/init-standalone.sh"]
-        restart: "no"
-        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
-        environment:
-            OPENSIM_HOSTNAME: "${OPENSIM_HOSTNAME:-127.0.0.1}"
-            OPENSIM_REGION_NAME: "${OPENSIM_REGION_NAME:-Welcome Island}"
-            OPENSIM_REGION_X: "${OPENSIM_REGION_X:-1000}"
-            OPENSIM_REGION_Y: "${OPENSIM_REGION_Y:-1000}"
-            OPENSIM_REGION_PORT: "${OPENSIM_REGION_PORT:-9000}"
-            OPENSIM_ESTATE_NAME: "${OPENSIM_ESTATE_NAME:-My Estate}"
-            OPENSIM_ESTATE_OWNER_FIRST: "${OPENSIM_ESTATE_OWNER_FIRST:-Bot}"
-            OPENSIM_ESTATE_OWNER_LAST: "${OPENSIM_ESTATE_OWNER_LAST:-Handler}"
-            OPENSIM_ESTATE_OWNER_PASSWORD: "${OPENSIM_ESTATE_OWNER_PASSWORD:-changeme}"
-            OPENSIM_ESTATE_OWNER_EMAIL: "${OPENSIM_ESTATE_OWNER_EMAIL:-admin@example.com}"
-            OPENSIM_ESTATE_OWNER_UUID: "${OPENSIM_ESTATE_OWNER_UUID:-00000000-0000-0000-0000-000000000000}"
-            OPENSIM_GRID_NAME: "${OPENSIM_GRID_NAME:-My OpenSim Grid}"
-            OPENSIM_GRID_NICK: "${OPENSIM_GRID_NICK:-opensimgrid}"
-            OPENSIM_WELCOME_MESSAGE: "${OPENSIM_WELCOME_MESSAGE:-Welcome to My OpenSim Grid!}"
-            OPENSIM_CONSOLE_USER: "${OPENSIM_CONSOLE_USER:-ConsoleUser}"
-            OPENSIM_CONSOLE_PASS: "${OPENSIM_CONSOLE_PASS:-ConsolePass}"
-            OPENSIM_WEBRTC_VOICE_ENABLED: "${OPENSIM_WEBRTC_VOICE_ENABLED:-true}"
-            OPENSIM_JANUS_PUBLIC_HOST: "${OPENSIM_JANUS_PUBLIC_HOST:-${OPENSIM_HOSTNAME:-opensim}}"
-            JANUS_HTTP_PORT: "${JANUS_HTTP_PORT:-14223}"
-            JANUS_HTTP_BASEPATH: "${JANUS_HTTP_BASEPATH:-/voice}"
-            JANUS_HTTP_ADMIN_PORT: "${JANUS_HTTP_ADMIN_PORT:-14225}"
-            JANUS_HTTP_ADMIN_BASEPATH: "${JANUS_HTTP_ADMIN_BASEPATH:-/voiceAdmin}"
-            JANUS_API_TOKEN: "${JANUS_API_TOKEN:-change-me-api-token}"
-            JANUS_ADMIN_TOKEN: "${JANUS_ADMIN_TOKEN:-change-me-admin-token}"
-            MARIADB_HOST: "${MARIADB_HOST:-${MYSQL_HOST:-mariadb}}"
-            MARIADB_DATABASE: "${MARIADB_DATABASE:-${MYSQL_DATABASE:-opensim}}"
-            MARIADB_USER: "${MARIADB_USER:-${MYSQL_USER:-opensim}}"
-            MARIADB_PASSWORD: "${MARIADB_PASSWORD:-${MYSQL_PASSWORD:-opensimpassword}}"
-        volumes:
-            - opensim-workspace:/workspace
-            - opensim-config:/config
-        depends_on:
-            mariadb:
-                condition: service_healthy
-
-    opensim:
-        image: "${OPENSIM_SOURCE_IMAGE:-bithatch/opensim-ai-standalone:dev-latest}"
-        restart: unless-stopped
-        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
-        volumes:
-            - opensim-workspace:/workspace
-            - opensim-config:/config
-            - opensim-assetcache:/opt/opensim/bin/assetcache
-            - opensim-maptiles:/opt/opensim/bin/maptiles
-        ports:
-            - "${OPENSIM_REGION_PORT:-9000}:9000/tcp"
-            - "${OPENSIM_REGION_PORT:-9000}:9000/udp"
-        depends_on:
-            opensim-init:
-                condition: service_completed_successfully
-            opensim-janus:
-                condition: service_healthy
-
-    opensim-janus-init:
-        image: "${OPENSIM_JANUS_IMAGE:-misterblue/os-webrtc-janus-docker:latest}"
-        entrypoint: ["/bin/sh", "/scripts/janus-init.sh"]
-        restart: "no"
-        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
-        environment:
-            JANUS_SERVER_NAME: "${JANUS_SERVER_NAME:-GridVoice}"
-            JANUS_HTTP_ENABLE: "${JANUS_HTTP_ENABLE:-true}"
-            JANUS_HTTP_PORT: "${JANUS_HTTP_PORT:-14223}"
-            JANUS_HTTP_BASEPATH: "${JANUS_HTTP_BASEPATH:-/voice}"
-            JANUS_HTTPS_ENABLE: "${JANUS_HTTPS_ENABLE:-false}"
-            JANUS_HTTPS_PORT: "${JANUS_HTTPS_PORT:-14224}"
-            JANUS_HTTP_ADMIN_ENABLE: "${JANUS_HTTP_ADMIN_ENABLE:-true}"
-            JANUS_HTTP_ADMIN_PORT: "${JANUS_HTTP_ADMIN_PORT:-14225}"
-            JANUS_HTTP_ADMIN_BASEPATH: "${JANUS_HTTP_ADMIN_BASEPATH:-/voiceAdmin}"
-            JANUS_API_TOKEN: "${JANUS_API_TOKEN:-change-me-api-token}"
-            JANUS_ADMIN_TOKEN: "${JANUS_ADMIN_TOKEN:-change-me-admin-token}"
-        volumes:
-            - ./docker/janus-init.sh:/scripts/janus-init.sh:ro
-            - opensim-janus-config:/janus-config
-
-    opensim-janus:
-        image: "${OPENSIM_JANUS_IMAGE:-misterblue/os-webrtc-janus-docker:latest}"
-        restart: unless-stopped
-        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
-        ports:
-            - "${JANUS_HTTP_PORT:-14223}:${JANUS_HTTP_PORT:-14223}/tcp"
-            - "${JANUS_HTTP_ADMIN_PORT:-14225}:${JANUS_HTTP_ADMIN_PORT:-14225}/tcp"
-            - "${JANUS_UDP_RTP_MIN:-10000}-${JANUS_UDP_RTP_MAX:-10200}:${JANUS_UDP_RTP_MIN:-10000}-${JANUS_UDP_RTP_MAX:-10200}/udp"
-        volumes:
-            - opensim-janus-config:/opt/janus/etc/janus
-        healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    'if command -v curl >/dev/null 2>&1; then curl -fsS "http://127.0.0.1:${JANUS_HTTP_PORT:-14223}${JANUS_HTTP_BASEPATH:-/voice}/info" >/dev/null; elif command -v wget >/dev/null 2>&1; then wget -qO- "http://127.0.0.1:${JANUS_HTTP_PORT:-14223}${JANUS_HTTP_BASEPATH:-/voice}/info" >/dev/null; else exit 1; fi',
-                ]
-            interval: 10s
-            timeout: 5s
-            retries: 24
-            start_period: 15s
-        depends_on:
-            opensim-janus-init:
-                condition: service_completed_successfully
-
-    opensim-console2mcp:
-        image: "${OPENSIM_CONSOLE2MCP_IMAGE:-bithatch/opensim-console2mcp:latest}"
-        restart: unless-stopped
-        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
-        environment:
-            CONSOLE_MCP_TRANSPORT: "${CONSOLE_MCP_TRANSPORT:-http}"
-            CONSOLE_MCP_HOST: "${CONSOLE_MCP_HOST:-0.0.0.0}"
-            CONSOLE_MCP_PORT: "${CONSOLE_MCP_PORT:-8997}"
-            OPENSIM_CONSOLE_URL: "${OPENSIM_CONSOLE_URL:-http://opensim:9000}"
-            OPENSIM_CONSOLE_USER: "${OPENSIM_CONSOLE_USER:-ConsoleUser}"
-            OPENSIM_CONSOLE_PASS: "${OPENSIM_CONSOLE_PASS:-ConsolePass}"
-        ports:
-            - "${CONSOLE_MCP_PORT:-8997}:${CONSOLE_MCP_PORT:-8997}/tcp"
-        depends_on:
-            opensim:
-                condition: service_started
-
-    opensim-spawner:
+    spawner:
         image: "${OPENSIM_SPAWNER_IMAGE:-bithatch/opensim-spawner:latest}"
         restart: unless-stopped
         pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
         environment:
             OPENSIM_HOSTNAME: "${OPENSIM_HOSTNAME:-opensim}"
+            OPENSIM_USER_EMAIL: "${OPENSIM_USER_EMAIL:-admin@example.com}"
             OPENSIM_ESTATE_NAME: "${OPENSIM_ESTATE_NAME:-Botland}"
-            OPENSIM_ESTATE_OWNER_FIRST: "${OPENSIM_ESTATE_OWNER_FIRST:-Bot}"
-            OPENSIM_ESTATE_OWNER_LAST: "${OPENSIM_ESTATE_OWNER_LAST:-Handler}"
-            OPENSIM_ESTATE_OWNER_PASSWORD: "${OPENSIM_ESTATE_OWNER_PASSWORD:-changeme}"
-            OPENSIM_ESTATE_OWNER_UUID: "${OPENSIM_ESTATE_OWNER_UUID:-00000000-0000-0000-0000-000000000000}"
-            OPENSIM_WELCOME_MESSAGE: "${OPENSIM_WELCOME_MESSAGE:-Welcome to Bot Grid!}"
+            OPENSIM_REGION_X: "${OPENSIM_REGION_X:-1000}"
+            OPENSIM_REGION_Y: "${OPENSIM_REGION_Y:-1000}"
+            OPENSIM_ESTATE_ARCHIVE: "${OPENSIM_ESTATE_ARCHIVE:-blank}"
+            OPENSIM_USER_FIRST: "${OPENSIM_USER_FIRST:-Bot}"
+            OPENSIM_USER_LAST: "${OPENSIM_USER_LAST:-Handler}"
+            OPENSIM_USER_PASSWORD: "${OPENSIM_USER_PASSWORD:-changeme}"
+            OPENSIM_WELCOME_MESSAGE: "${OPENSIM_WELCOME_MESSAGE:-Welcome to ${OPENSIM_GRID_NAME:-Bot Grid}!}"
             MARIADB_HOST: "${MARIADB_HOST:-mariadb}"
             MARIADB_DATABASE: "${MARIADB_DATABASE:-opensim}"
             MARIADB_USER: "${MARIADB_USER:-opensim}"
@@ -175,29 +62,28 @@ services:
             OPENSIM_PULL_POLICY: "${OPENSIM_PULL_POLICY:-missing}"
             OPENSIM_RESTART_POLICY: "${OPENSIM_RESTART_POLICY:-unless-stopped}"
             OPENSIM_CREATE_BOT_USER: "${OPENSIM_CREATE_BOT_USER:-true}"
-            OPENSIM_LOGIN_FIRSTNAME: "${OPENSIM_LOGIN_FIRSTNAME:-Bot}"
-            OPENSIM_LOGIN_LASTNAME: "${OPENSIM_LOGIN_LASTNAME:-User}"
-            OPENSIM_LOGIN_EMAIL: "${OPENSIM_LOGIN_EMAIL:-bot@localhost}"
-            OPENSIM_LOGIN_MODEL: "${OPENSIM_LOGIN_MODEL:-Ruth}"
-            OPENSIM_LOGIN_URI: "${OPENSIM_LOGIN_URI:-http://opensim:9000}"
+            OPENSIM_BOT_FIRST: "${OPENSIM_BOT_FIRST:-Bot}"
+            OPENSIM_BOT_LAST: "${OPENSIM_BOT_LAST:-User}"
+            OPENSIM_BOT_EMAIL: "${OPENSIM_BOT_EMAIL:-bot@localhost}"
+            OPENSIM_BOT_APPEARANCE: "${OPENSIM_BOT_APPEARANCE:-Cube Bot}"
+            OPENSIM_BOT_GENDER: "${OPENSIM_BOT_GENDER:-neutral}"
+            OPENSIM_LOGIN_URI: "${OPENSIM_LOGIN_URI:-http://${OPENSIM_GRID_SERVICES}:9000}"
             OPENSIM_LOGIN_START: "${OPENSIM_LOGIN_START:-last}"
             OPENSIM_SPAWNER_HTTP_HOST: "${OPENSIM_SPAWNER_HTTP_HOST:-0.0.0.0}"
             OPENSIM_SPAWNER_HTTP_PORT: "${OPENSIM_SPAWNER_HTTP_PORT:-8993}"
             OPENSIM_SPAWNER_TOKEN: "${OPENSIM_SPAWNER_TOKEN:-}"
             OPENSIM_SPAWNER_FIRST_PORT: "${OPENSIM_SPAWNER_FIRST_PORT:-9000}"
-            OPENSIM_CONSOLE_URL: "${OPENSIM_CONSOLE_URL:-http://opensim:9000}"
+            OPENSIM_CONSOLE_URL: "${OPENSIM_CONSOLE_URL:-http://${OPENSIM_GRID_SERVICES}:9000}"
             OPENSIM_CONSOLE_USER: "${OPENSIM_CONSOLE_USER:-ConsoleUser}"
             OPENSIM_CONSOLE_PASS: "${OPENSIM_CONSOLE_PASS:-ConsolePass}"
-            OPENSIM_BOT_HANDLER_FIRSTNAME: "${OPENSIM_BOT_HANDLER_FIRSTNAME:-${OPENSIM_ESTATE_OWNER_FIRST:-Bot}}"
-            OPENSIM_BOT_HANDLER_LASTNAME: "${OPENSIM_BOT_HANDLER_LASTNAME:-${OPENSIM_ESTATE_OWNER_LAST:-Handler}}"
-            SPAWNER_HOST: "${SPAWNER_HOST:-opensim-spawner}"
+            SPAWNER_HOST: "${SPAWNER_HOST:-${COMPOSER_PROJECT_NAME:-opensim-ai}-spawner-1}"
             OPENSIM_METAVERSE2MCP_IMAGE: "${OPENSIM_METAVERSE2MCP_IMAGE:-bithatch/opensim-metaverse2mcp:latest}"
             OPENSIM_SIMULATOR_IMAGE: "${OPENSIM_SIMULATOR_IMAGE:-bithatch/opensim-simulator:latest}"
             OPENSIM_OPENCODE_IMAGE: "${OPENSIM_OPENCODE_IMAGE:-bithatch/opensim-opencode:latest}"
             VOICE_ROUTING_ENABLED: "${VOICE_ROUTING_ENABLED:-true}"
             VOICE_BACKEND: "${VOICE_BACKEND:-webrtc}"
             PIPER_SCHEME: "${PIPER_SCHEME:-http}"
-            PIPER_HOST: "${PIPER_HOST:-opensim-piper}"
+            PIPER_HOST: "${PIPER_HOST:-${COMPOSER_PROJECT_NAME:-opensim-ai}-piper-1}"
             PIPER_PORT: "${PIPER_PORT:-8995}"
             PIPER_TTS_PATH: "${PIPER_TTS_PATH:-/tts}"
             PIPER_VOICES_PATH: "${PIPER_VOICES_PATH:-/voices}"
@@ -225,13 +111,10 @@ services:
             OPENSIM_NETWORK: "${OPENSIM_NETWORK:-${COMPOSE_PROJECT_NAME:-opensim-ai}_default}"
             COMPOSE_PROJECT_NAME: "${COMPOSE_PROJECT_NAME:-opensim-ai}"
             BLENDER_MCP_PORT: "${BLENDER_MCP_PORT:-8996}"
-            BOT_APPEARANCE: "${BOT_APPEARANCE:-Cube Bot}"
-            BOT_GENDER: "${BOT_GENDER:-neutral}"
-
-            OPENCODE_LSL_DIALOG_BRIDGE_TRUSTED_OWNER_ID: "${OPENCODE_LSL_DIALOG_BRIDGE_TRUSTED_OWNER_ID:-}"
-            OPENCODE_LSL_DIALOG_BRIDGE_TRUSTED_OBJECT_ID: "${OPENCODE_LSL_DIALOG_BRIDGE_TRUSTED_OBJECT_ID:-}"
-            OPENCODE_LSL_DIALOG_BRIDGE_REQUIRE_TRUSTED_SENDER: "${OPENCODE_LSL_DIALOG_BRIDGE_REQUIRE_TRUSTED_SENDER:-true}"
-            OPENCODE_LSL_DIALOG_BRIDGE_TRUST_STATE_FILE: "${OPENCODE_LSL_DIALOG_BRIDGE_TRUST_STATE_FILE:-/config/opensim-metaverse2mcp/dialog-bridge-trust-{bot_uuid}.json}"
+            WEAR_FOLDER_NAME: "${WEAR_FOLDER_NAME:-Cube Bot}"
+            OPENSIM_HANDLER_CONFIG: "${OPENSIM_HANDLER_CONFIG:-/config/handlers.json}"
+            METAVERSE_BRIDGE_TRUST_STATE_FILE: "${METAVERSE_BRIDGE_TRUST_STATE_FILE:-/config/bridges/{bot_uuid}.json}"
+            OPENSIM_PROVISION_MODE: "${OPENSIM_PROVISION_MODE:-guided}"
         volumes:
             - opensim-config:/config
             - opensim-workspace:/workspace
@@ -240,12 +123,72 @@ services:
         ports:
             - "${OPENSIM_SPAWNER_HTTP_PORT:-8993}:${OPENSIM_SPAWNER_HTTP_PORT:-8993}/tcp"
         depends_on:
-            opensim:
-                condition: service_started
-            opensim-janus:
+            mariadb:
+                condition: service_healthy
+            janus:
                 condition: service_healthy
 
-    opensim-blender:
+    janus-init:
+        image: "${OPENSIM_JANUS_IMAGE:-misterblue/os-webrtc-janus-docker:latest}"
+        entrypoint: ["/bin/sh", "/scripts/janus-init.sh"]
+        restart: "no"
+        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
+        environment:
+            JANUS_SERVER_NAME: "${JANUS_SERVER_NAME:-GridVoice}"
+            JANUS_HTTP_ENABLE: "${JANUS_HTTP_ENABLE:-true}"
+            JANUS_HTTP_PORT: "${JANUS_HTTP_PORT:-14223}"
+            JANUS_HTTP_BASEPATH: "${JANUS_HTTP_BASEPATH:-/voice}"
+            JANUS_HTTPS_ENABLE: "${JANUS_HTTPS_ENABLE:-false}"
+            JANUS_HTTPS_PORT: "${JANUS_HTTPS_PORT:-14224}"
+            JANUS_HTTP_ADMIN_ENABLE: "${JANUS_HTTP_ADMIN_ENABLE:-true}"
+            JANUS_HTTP_ADMIN_PORT: "${JANUS_HTTP_ADMIN_PORT:-14225}"
+            JANUS_HTTP_ADMIN_BASEPATH: "${JANUS_HTTP_ADMIN_BASEPATH:-/voiceAdmin}"
+            JANUS_API_TOKEN: "${JANUS_API_TOKEN:-change-me-api-token}"
+            JANUS_ADMIN_TOKEN: "${JANUS_ADMIN_TOKEN:-change-me-admin-token}"
+        volumes:
+            - ./docker/janus-init.sh:/scripts/janus-init.sh:ro
+            - opensim-janus-config:/janus-config
+
+    janus:
+        image: "${OPENSIM_JANUS_IMAGE:-misterblue/os-webrtc-janus-docker:latest}"
+        restart: unless-stopped
+        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
+        ports:
+            - "${JANUS_HTTP_PORT:-14223}:${JANUS_HTTP_PORT:-14223}/tcp"
+            - "${JANUS_HTTP_ADMIN_PORT:-14225}:${JANUS_HTTP_ADMIN_PORT:-14225}/tcp"
+            - "${JANUS_UDP_RTP_MIN:-10000}-${JANUS_UDP_RTP_MAX:-10200}:${JANUS_UDP_RTP_MIN:-10000}-${JANUS_UDP_RTP_MAX:-10200}/udp"
+        volumes:
+            - opensim-janus-config:/opt/janus/etc/janus
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    'if command -v curl >/dev/null 2>&1; then curl -fsS "http://127.0.0.1:${JANUS_HTTP_PORT:-14223}${JANUS_HTTP_BASEPATH:-/voice}/info" >/dev/null; elif command -v wget >/dev/null 2>&1; then wget -qO- "http://127.0.0.1:${JANUS_HTTP_PORT:-14223}${JANUS_HTTP_BASEPATH:-/voice}/info" >/dev/null; else exit 1; fi',
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 24
+            start_period: 15s
+        depends_on:
+            janus-init:
+                condition: service_completed_successfully
+
+    console2mcp:
+        image: "${OPENSIM_CONSOLE2MCP_IMAGE:-bithatch/opensim-console2mcp:latest}"
+        restart: unless-stopped
+        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
+        environment:
+            CONSOLE_MCP_TRANSPORT: "${CONSOLE_MCP_TRANSPORT:-http}"
+            CONSOLE_MCP_HOST: "${CONSOLE_MCP_HOST:-0.0.0.0}"
+            CONSOLE_MCP_PORT: "${CONSOLE_MCP_PORT:-8997}"
+            OPENSIM_CONSOLE_URL: "${OPENSIM_CONSOLE_URL:-http://${OPENSIM_GRID_SERVICES}:9000}"
+            OPENSIM_CONSOLE_USER: "${OPENSIM_CONSOLE_USER:-ConsoleUser}"
+            OPENSIM_CONSOLE_PASS: "${OPENSIM_CONSOLE_PASS:-ConsolePass}"
+        depends_on:
+            spawner:
+                condition: service_started
+
+    blender:
         image: "${OPENSIM_BLENDER_IMAGE:-bithatch/opensim-blender:latest}"
         restart: unless-stopped
         pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
@@ -261,13 +204,11 @@ services:
             - blender-config:/root/.config/blender
             - blender-cache:/root/.cache/blender
             - blender-data:/root/.local/share/blender
-        ports:
-            - "${BLENDER_MCP_PORT:-8996}:${BLENDER_MCP_PORT:-8996}/tcp"
         depends_on:
-            opensim-spawner:
+            spawner:
                 condition: service_completed_successfully
 
-    opensim-piper:
+    piper:
         image: "${OPENSIM_PIPER_IMAGE:-bithatch/opensim-piper:latest}"
         restart: unless-stopped
         pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
@@ -278,16 +219,12 @@ services:
             PIPER_TIMEOUT_SECONDS: "${PIPER_TIMEOUT_SECONDS:-60}"
         volumes:
             - piper-voices:/voices
-        ports:
-            - "${PIPER_HTTP_PORT:-8995}:8995/tcp"
 
 volumes:
     opensim-mariadb:
     opensim-workspace:
-    opensim-config:
     opensim-templates:
-    opensim-bin:
-    opensim-regions:
+    opensim-config:
     opensim-assetcache:
     opensim-maptiles:
     spawner-data:

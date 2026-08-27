@@ -10,19 +10,38 @@ if [ ! -f .env ]; then
     echo "Created .env. Review it before re-running if needed."
 fi
 
-export OPENSIM_SOURCE_IMAGE="${OPENSIM_SOURCE_IMAGE:-opensim-ai-standalone:dev-latest}"
-
-if [ "${1:-}" = "--local" ] ; then
-    shift
-    export OPENSIM_OPENCODE_IMAGE=opensim-opencode:local
-    export OPENSIM_PIPER_IMAGE=opensim-piper:local
-    export OPENSIM_BLENDER_IMAGE=opensim-blender:local
-    export OPENSIM_METAVERSE2MCP_IMAGE=opensim-metaverse2mcp:local
-    export OPENSIM_SPAWNER_IMAGE=opensim-spawner:local
-    export OPENSIM_CONSOLE2MCP_IMAGE=opensim-console2mcp:local
-    export OPENSIM_SIMULATOR_IMAGE=opensim-simulator:local
+if [ $(grep -c '^OPENSIM_HOSTNAME=' .env) -eq 0 ]; then
+    echo "OPENSIM_HOSTNAME is not set in .env. Please set it before running."
+    exit 1
 fi
 
+export OPENSIM_RELEASE_IMAGE="${OPENSIM_RELEASE_IMAGE:-opensim-ai-standalone:latest}"
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --local)
+            export OPENSIM_OPENCODE_IMAGE=opensim-opencode:local
+            export OPENSIM_PIPER_IMAGE=opensim-piper:local
+            export OPENSIM_BLENDER_IMAGE=opensim-blender:local
+            export OPENSIM_METAVERSE2MCP_IMAGE=opensim-metaverse2mcp:local
+            export OPENSIM_SPAWNER_IMAGE=opensim-spawner:local
+            export OPENSIM_CONSOLE2MCP_IMAGE=opensim-console2mcp:local
+            export OPENSIM_SIMULATOR_IMAGE=opensim-simulator:local
+            ;;
+        --*)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+        *)  if [ -z "${OPENSIM_HOSTNAME:-}" ]; then
+                export OPENSIM_HOSTNAME="$1"
+            else
+                echo "Unknown option: $1"
+                exit 1
+            fi
+            ;;
+    esac
+    shift
+done
 
 exec docker compose \
   -f docker-compose.yml \

@@ -161,47 +161,6 @@ if [ "${PUBLISH}" = "y" ] ; then
     fi
 fi
 
-# 
-# 
-#
-echo "###########################################"
-echo "Open Simulator AI Standalone"
-echo "###########################################"
- 
-cd "${STACK_GIT_BASE}/opensim-ai-docker"
-
-if [ "${PUBLISH}" = "y" ] ; then
-    if ! docker build \
-      --target source-runtime \
-      --build-arg OPENSIM_GIT_URL=git://opensimulator.org/git/opensim \
-      --build-arg OPENSIM_GIT_REF=master \
-      -t bithatch/opensim-ai-standalone:dev-latest \
-      -t bithatch/opensim-ai-standalone:dev-${TAG} \
-      . \
-      || \
-      ! docker push bithatch/opensim-ai-standalone:dev-latest \
-      || \
-      ! docker push bithatch/opensim-ai-standalone:dev-${TAG} ; then
-        echo "$0: opensim-ai-standalone dev publish failed" >&2
-        exit 1q
-    fi
-    
-    if ! docker build \
-      --target release-runtime \
-      --build-arg OPENSIM_RELEASE_REF=r78cb44c \
-      --build-arg OPENSIM_RELEASE_URL=https://github.com/opensim/opensim/releases/download/r78cb44c/LastDotNetBuild.zip \
-      -t bithatch/opensim-ai-standalone:latest \
-      -t bithatch/opensim-ai-standalone:${TAG} \
-      . \
-      || \
-      ! docker push bithatch/opensim-ai-standalone:latest \
-      || \
-      ! docker push bithatch/opensim-ai-standalone:${TAG} ; then
-        echo "$0: opensim-ai-standalone publish failed" >&2
-        exit 1
-    fi
-fi
-
 
 echo "###########################################"
 echo "Done!"
