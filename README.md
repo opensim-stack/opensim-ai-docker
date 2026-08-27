@@ -65,6 +65,7 @@ docker compose down -v
 
 ## Direct GitHub Files
 
-- [Source mode compose](https://github.com/opensim-stack/opensim-ai-docker/blob/main/docker-compose.source.yml)
-- [Release mode compose](https://github.com/opensim-stack/opensim-ai-docker/blob/main/docker-compose.yml)
+
+
+- [Compose](https://github.com/opensim-stack/opensim-ai-docker/blob/main/docker-compose.yml)
 - [Example environment file](https://github.com/opensim-stack/opensim-ai-docker/blob/main/.env.example)
