@@ -76,14 +76,14 @@ services:
             OPENSIM_CONSOLE_URL: "${OPENSIM_CONSOLE_URL:-http://${OPENSIM_GRID_SERVICES:-${COMPOSE_PROJECT_NAME:-opensim-ai}-grid-services}:9000}"
             OPENSIM_CONSOLE_USER: "${OPENSIM_CONSOLE_USER:-ConsoleUser}"
             OPENSIM_CONSOLE_PASS: "${OPENSIM_CONSOLE_PASS:-ConsolePass}"
-            SPAWNER_HOST: "${SPAWNER_HOST:-${COMPOSER_PROJECT_NAME:-opensim-ai}-spawner-1}"
+            SPAWNER_HOST: "${SPAWNER_HOST:-${COMPOSE_PROJECT_NAME:-opensim-ai}-spawner-1}"
             OPENSIM_METAVERSE2MCP_IMAGE: "${OPENSIM_METAVERSE2MCP_IMAGE:-bithatch/opensim-metaverse2mcp:latest}"
             OPENSIM_SIMULATOR_IMAGE: "${OPENSIM_SIMULATOR_IMAGE:-bithatch/opensim-simulator:latest}"
             OPENSIM_OPENCODE_IMAGE: "${OPENSIM_OPENCODE_IMAGE:-bithatch/opensim-opencode:latest}"
             VOICE_ROUTING_ENABLED: "${VOICE_ROUTING_ENABLED:-true}"
             VOICE_BACKEND: "${VOICE_BACKEND:-webrtc}"
             PIPER_SCHEME: "${PIPER_SCHEME:-http}"
-            PIPER_HOST: "${PIPER_HOST:-${COMPOSER_PROJECT_NAME:-opensim-ai}-piper-1}"
+            PIPER_HOST: "${PIPER_HOST:-${COMPOSE_PROJECT_NAME:-opensim-ai}-piper-1}"
             PIPER_PORT: "${PIPER_PORT:-8995}"
             PIPER_TTS_PATH: "${PIPER_TTS_PATH:-/tts}"
             PIPER_VOICES_PATH: "${PIPER_VOICES_PATH:-/voices}"
@@ -126,7 +126,7 @@ services:
             mariadb:
                 condition: service_healthy
             janus:
-                condition: service_healthy
+                condition: service_started
 
     janus-init:
         image: "${OPENSIM_JANUS_IMAGE:-misterblue/os-webrtc-janus-docker:latest}"
@@ -206,7 +206,7 @@ services:
             - blender-data:/root/.local/share/blender
         depends_on:
             spawner:
-                condition: service_completed_successfully
+                condition: service_started
 
     piper:
         image: "${OPENSIM_PIPER_IMAGE:-bithatch/opensim-piper:latest}"
