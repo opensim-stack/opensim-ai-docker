@@ -8,10 +8,10 @@ services:
         image: mariadb:11
         restart: unless-stopped
         environment:
-            MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD:-${MYSQL_ROOT_PASSWORD:-rootpassword}}"
-            MARIADB_DATABASE: "${MARIADB_DATABASE:-${MYSQL_DATABASE:-opensim}}"
-            MARIADB_USER: "${MARIADB_USER:-${MYSQL_USER:-opensim}}"
-            MARIADB_PASSWORD: "${MARIADB_PASSWORD:-${MYSQL_PASSWORD:-opensimpassword}}"
+            MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD:-rootpassword}"
+            MARIADB_DATABASE: "${MARIADB_DATABASE:-opensim}"
+            MARIADB_USER: "${MARIADB_USER:-opensim}"
+            MARIADB_PASSWORD: "${MARIADB_PASSWORD:-opensimpassword}"
         command: >
             --character-set-server=utf8mb4
             --collation-server=utf8mb4_unicode_ci
@@ -43,7 +43,7 @@ services:
             OPENSIM_USER_LAST: "${OPENSIM_USER_LAST:-Handler}"
             OPENSIM_USER_PASSWORD: "${OPENSIM_USER_PASSWORD:-changeme}"
             OPENSIM_WELCOME_MESSAGE: "${OPENSIM_WELCOME_MESSAGE:-Welcome to ${OPENSIM_GRID_NAME:-Bot Grid}!}"
-            MARIADB_HOST: "${MARIADB_HOST:-mariadb}"
+            MARIADB_HOST: "${MARIADB_HOST:-${COMPOSE_PROJECT_NAME:-opensim-ai}-mariadb-1}"
             MARIADB_DATABASE: "${MARIADB_DATABASE:-opensim}"
             MARIADB_USER: "${MARIADB_USER:-opensim}"
             MARIADB_PASSWORD: "${MARIADB_PASSWORD:-opensimpassword}"
@@ -51,10 +51,10 @@ services:
             OPENSIM_JANUS_PUBLIC_HOST: "${OPENSIM_JANUS_PUBLIC_HOST:-${OPENSIM_HOSTNAME:-opensim}}"
             JANUS_HTTP_PORT: "${JANUS_HTTP_PORT:-14223}"
             JANUS_HTTP_BASEPATH: "${JANUS_HTTP_BASEPATH:-/voice}"
-            JANUS_API_TOKEN: "${JANUS_API_TOKEN:-}"
+            JANUS_API_TOKEN: "${JANUS_API_TOKEN:-2008c1ca-bc7a-4494-9bb5-cfa888b9b131}"
             JANUS_HTTP_ADMIN_PORT: "${JANUS_HTTP_ADMIN_PORT:-14225}"
             JANUS_HTTP_ADMIN_BASEPATH: "${JANUS_HTTP_ADMIN_BASEPATH:-/voiceAdmin}"
-            JANUS_ADMIN_TOKEN: "${JANUS_ADMIN_TOKEN:-}"
+            JANUS_ADMIN_TOKEN: "${JANUS_ADMIN_TOKEN:-d1d67635-a0bb-49d5-960b-7ff6b820ffbc}"
             OPENSIM_ROBUST_PUBLIC_PORT: "${OPENSIM_ROBUST_PUBLIC_PORT:-8002}"
             OPENSIM_ROBUST_PRIVATE_PORT: "${OPENSIM_ROBUST_PRIVATE_PORT:-8003}"
             OPENSIM_GRID_NAME: "${OPENSIM_GRID_NAME:-Bot Grid}"
