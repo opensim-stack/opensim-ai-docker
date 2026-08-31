@@ -119,6 +119,27 @@ if [ "${PUBLISH}" = "y" ] ; then
     fi
 fi
 
+# Database2MCP
+echo "###########################################"
+echo "Database2MCP"
+echo "###########################################"
+cd "${STACK_GIT_BASE}/opensim-database2mcp"
+if ! docker build -t opensim-database2mcp:local . ; then
+    echo "$0: opensim-database2mcp build  failed" >&2
+    exit 1
+fi
+if [ "${PUBLISH}" = "y" ] ; then
+    if ! docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+          -t bithatch/opensim-database2mcp:latest \
+          -t bithatch/opensim-database2mcp:${TAG} \
+          --push \
+          . ; then
+        echo "$0: opensim-database2mcp publish failed" >&2
+        exit 1
+    fi
+fi
+
 # Metaverse2MCP
 echo "###########################################"
 echo "Metaverse2MCP"
