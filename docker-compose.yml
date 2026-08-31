@@ -80,6 +80,7 @@ services:
             OPENSIM_METAVERSE2MCP_IMAGE: "${OPENSIM_METAVERSE2MCP_IMAGE:-bithatch/opensim-metaverse2mcp:latest}"
             OPENSIM_SIMULATOR_IMAGE: "${OPENSIM_SIMULATOR_IMAGE:-bithatch/opensim-simulator:latest}"
             OPENSIM_OPENCODE_IMAGE: "${OPENSIM_OPENCODE_IMAGE:-bithatch/opensim-opencode:latest}"
+            OPENSIM_DATABASE2MCP_IMAGE: "${OPENSIM_DATABASE2MCP_IMAGE:-bithatch/opensim-database2mcp:latest}"
             VOICE_ROUTING_ENABLED: "${VOICE_ROUTING_ENABLED:-true}"
             VOICE_BACKEND: "${VOICE_BACKEND:-webrtc}"
             PIPER_SCHEME: "${PIPER_SCHEME:-http}"
@@ -227,41 +228,6 @@ services:
             janus-init:
                 condition: service_completed_successfully
 
-    console2mcp:
-        image: "${OPENSIM_CONSOLE2MCP_IMAGE:-bithatch/opensim-console2mcp:latest}"
-        restart: unless-stopped
-        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
-        environment:
-            CONSOLE_MCP_TRANSPORT: "${CONSOLE_MCP_TRANSPORT:-http}"
-            CONSOLE_MCP_HOST: "${CONSOLE_MCP_HOST:-0.0.0.0}"
-            CONSOLE_MCP_PORT: "${CONSOLE_MCP_PORT:-8997}"
-            OPENSIM_CONSOLE_URL: "${OPENSIM_CONSOLE_URL:-http://${OPENSIM_GRID_SERVICES:-${COMPOSE_PROJECT_NAME:-opensim-ai}-grid-services}:9000}"
-            OPENSIM_CONSOLE_USER: "${OPENSIM_CONSOLE_USER:-ConsoleUser}"
-            OPENSIM_CONSOLE_PASS: "${OPENSIM_CONSOLE_PASS:-ConsolePass}"
-        depends_on:
-            spawner:
-                condition: service_healthy
-
-    blender:
-        image: "${OPENSIM_BLENDER_IMAGE:-bithatch/opensim-blender:latest}"
-        restart: unless-stopped
-        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
-        environment:
-            BLENDER_MCP_HOST: "${BLENDER_MCP_HOST:-0.0.0.0}"
-            BLENDER_MCP_PORT: "${BLENDER_MCP_PORT:-8996}"
-            BLENDER_TCP_PROTOCOL_HOST: "${BLENDER_TCP_PROTOCOL_HOST:-127.0.0.1}"
-            BLENDER_TCP_PROTOCOL_PORT: "${BLENDER_TCP_PROTOCOL_PORT:-9876}"
-            BLENDER_PROJECT_DIR: "${BLENDER_PROJECT_DIR:-/workspace}"
-            BLENDER_EXTRA_ARGS: "${BLENDER_EXTRA_ARGS:-}"
-        volumes:
-            - opensim-workspace:/workspace
-            - blender-config:/root/.config/blender
-            - blender-cache:/root/.cache/blender
-            - blender-data:/root/.local/share/blender
-        depends_on:
-            spawner:
-                condition: service_healthy
-
     piper:
         image: "${OPENSIM_PIPER_IMAGE:-bithatch/opensim-piper:latest}"
         restart: unless-stopped
@@ -282,9 +248,6 @@ volumes:
     opensim-assetcache:
     opensim-maptiles:
     spawner-data:
-    blender-config:
-    blender-cache:
-    blender-data:
     piper-voices:
     opensim-janus-config:
 

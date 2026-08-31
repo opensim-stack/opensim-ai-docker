@@ -27,6 +27,7 @@ while [ "$#" -gt 0 ]; do
             export OPENSIM_SPAWNER_IMAGE=opensim-spawner:local
             export OPENSIM_CONSOLE2MCP_IMAGE=opensim-console2mcp:local
             export OPENSIM_SIMULATOR_IMAGE=opensim-simulator:local
+            export OPENSIM_DATABASE2MCP_IMAGE=opensim-database2mcp:local
             ;;
         --*)
             echo "Unknown option: $1"

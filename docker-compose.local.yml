@@ -1,14 +1,4 @@
 services:
-    console2mcp:
-        build:
-            context: ../opensim-console2mcp
-        image: "${OPENSIM_CONSOLE2MCP_IMAGE:-opensim-console2mcp:latest}"
-    
-    blender:
-        build:
-            context: ../opensim-blender
-        image: "${OPENSIM_BLENDER_IMAGE:-opensim-blender:latest}"
-    
     piper:
         build:
             context: ../opensim-piper
