@@ -31,7 +31,7 @@ services:
     spawner:
         image: "${OPENSIM_SPAWNER_IMAGE:-bithatch/opensim-spawner:latest}"
         restart: unless-stopped
-        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
+        pull_policy: missing
         environment:
             OPENSIM_HOSTNAME: "${OPENSIM_HOSTNAME:-opensim}"
             OPENSIM_USER_EMAIL: "${OPENSIM_USER_EMAIL:-admin@example.com}"
@@ -188,7 +188,7 @@ services:
 
                 printf '[janus-init] Janus config generated in %s\n' "$${JANUS_CONFIG_DIR}"
         restart: "no"
-        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
+        pull_policy: missing
         environment:
             JANUS_SERVER_NAME: "${JANUS_SERVER_NAME:-GridVoice}"
             JANUS_HTTP_ENABLE: "${JANUS_HTTP_ENABLE:-true}"
@@ -207,7 +207,7 @@ services:
     janus:
         image: "${OPENSIM_JANUS_IMAGE:-misterblue/os-webrtc-janus-docker:latest}"
         restart: unless-stopped
-        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
+        pull_policy: missing
         ports:
             - "${JANUS_HTTP_PORT:-14223}:${JANUS_HTTP_PORT:-14223}/tcp"
             - "${JANUS_HTTP_ADMIN_PORT:-14225}:${JANUS_HTTP_ADMIN_PORT:-14225}/tcp"
@@ -231,7 +231,7 @@ services:
     piper:
         image: "${OPENSIM_PIPER_IMAGE:-bithatch/opensim-piper:latest}"
         restart: unless-stopped
-        pull_policy: "${OPENSIM_PULL_POLICY:-missing}"
+        pull_policy: missing
         environment:
             PIPER_HTTP_HOST: "${PIPER_HTTP_HOST:-0.0.0.0}"
             PIPER_HTTP_PORT: "${PIPER_HTTP_PORT:-8995}"
