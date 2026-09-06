@@ -1,9 +1,4 @@
 services:
-    piper:
-        build:
-            context: ../opensim-piper
-        image: "${OPENSIM_PIPER_IMAGE:-opensim-piper:latest}"
-    
     spawner:
         build:
             context: ../opensim-spawner
