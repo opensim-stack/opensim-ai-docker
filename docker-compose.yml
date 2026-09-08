@@ -74,6 +74,7 @@ services:
             OPENSIM_SIMULATOR_IMAGE: "${OPENSIM_SIMULATOR_IMAGE:-bithatch/opensim-simulator:latest}"
             OPENSIM_OPENCODE_IMAGE: "${OPENSIM_OPENCODE_IMAGE:-bithatch/opensim-opencode:latest}"
             OPENSIM_DATABASE2MCP_IMAGE: "${OPENSIM_DATABASE2MCP_IMAGE:-bithatch/opensim-database2mcp:latest}"
+            MARIADB_IMAGE: "${MARIADB_IMAGE:-mariadb:11}"
             METAVERSE_MCP_TRANSPORT: "${METAVERSE_MCP_TRANSPORT:-http}"
             METAVERSE_MCP_HOST: "${METAVERSE_MCP_HOST:-0.0.0.0}"
             METAVERSE_MCP_PORT: "${METAVERSE_MCP_PORT:-8999}"
@@ -100,6 +101,10 @@ services:
             OPENSIM_HANDLER_CONFIG: "${OPENSIM_HANDLER_CONFIG:-/config/handlers.json}"
             METAVERSE_BRIDGE_TRUST_STATE_FILE: "${METAVERSE_BRIDGE_TRUST_STATE_FILE:-/config/bridges/{bot_uuid}.json}"
             OPENSIM_PROVISION_MODE: "${OPENSIM_PROVISION_MODE:-guided}"
+            MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD:-rootpassword}"
+            MARIADB_DATABASE: "${MARIADB_DATABASE:-opensim}"
+            MARIADB_USER: "${MARIADB_USER:-opensim}"
+            MARIADB_PASSWORD: "${MARIADB_PASSWORD:-opensimpassword}"
         volumes:
             - opensim-config:/config
             - opensim-workspace:/workspace
