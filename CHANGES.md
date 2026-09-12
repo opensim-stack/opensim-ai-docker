@@ -14,4 +14,6 @@ This document changes between releases. At this early stage, these are more note
  * Set`initialized: true`
  * Set `consoleUser` and `consolePass`.
  * Add `global` entries. `"MARIADB_HOST" : "%cfg.projectName-mariadb%"`, `"MARIADB_DATABASE" : "opensim"` and  `"MARIADB_USER" : "opensim"`.
- * Stop spawner container.
+ * Restart spawner container.
+ * Disable all existing add-ons and re-enable.
+ * Check Stacks page for any updates that need doing.
