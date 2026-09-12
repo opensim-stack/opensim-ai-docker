@@ -6,9 +6,11 @@ This document changes between releases. At this early stage, these are more note
 
 *Big* changes in how containers and configuration are managed. *After* upgrading spawner having let it run once ... 
 
+ * Stop `opensim-ai-mariadb-1` container and rename it to `opensim-ai-mariadb`.
  * Remove the spawner container again (and remove volumes)
  * Rename the volume `opensim-ai_spawner-data` to `opensim-ai_opensim-spawner-data`
  * Edit `/data/grids.json` in opensim-spawner container.
+ * Add or set `tokens: { .. }` object with `"MARIADB_PASSWORD" : "opensim"` and `"MARIADB_ROOT_PASSWORD" : "rootpassword"`.  
  * Set `containerIds: "[opensim-ai-mariadb]"`
  * Set `level: "STACK"`
  * Set`initialized: true`
