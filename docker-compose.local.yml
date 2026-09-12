@@ -1,5 +1,0 @@
-services:
-    spawner:
-        build:
-            context: ../opensim-spawner
-        image: "${OPENSIM_SPAWNER_IMAGE:-opensim-spawner:latest}"

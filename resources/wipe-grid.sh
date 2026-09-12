@@ -2,6 +2,8 @@
 
 echo "********************************************************************"
 echo "WARNING: This script will wipe all containers data in the local grid."
+echo
+echo "Containers, Volumes and Networks with the prefix '${COMPOSE_PROJECT_NAME:-opensim-ai}' will be removed." 
 echo "********************************************************************"
 echo "Are you sure you want to continue? (y/n)"
 read -r answer
@@ -19,16 +21,14 @@ case "${answer}" in
     ;;
 esac
 
-cd "$(dirname "$0")" || exit 1
-docker compose down -v --remove-orphans
-
 # Spawned containers
 set x $(docker container ls -a|awk '{ print $NF }'|grep -v NAMES) ; shift
 if [ "$#" -gt 0 ]; then
     for i in $@; do
         case "$i" in
-            opensim-ai-*)
+            ${COMPOSE_PROJECT_NAME:-opensim-ai}-*)
                   echo "Removing containers: $i"
+                  docker container stop -t 10 "$i"
                   docker container rm -f "$i"
                 ;;
             *) ;;
@@ -42,9 +42,23 @@ set x $(docker volume ls -q) ; shift
 if [ "$#" -gt 0 ]; then
     for i in $@; do
         case "$i" in
-            opencode-data|opencode-cache|opencode-config|opencode-state-*|opencode-tool-*|opensim-ai*|opensim-workspace*|piper-voices)
+            ${COMPOSE_PROJECT_NAME:-opensim-ai}_*)
                 echo "Removing volume: $i"
                 docker volume rm -f "$i"
+                ;;
+            *) ;;
+        esac
+    done
+fi
+
+# Networks
+set x $(docker network ls|awk '{ print $2 }'|grep -v NAME) ; shift
+if [ "$#" -gt 0 ]; then
+    for i in $@; do
+        case "$i" in
+            ${COMPOSE_PROJECT_NAME:-opensim-ai}*)
+                echo "Removing network: $i"
+                docker network rm -f "$i"
                 ;;
             *) ;;
         esac

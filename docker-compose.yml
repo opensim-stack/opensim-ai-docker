@@ -3,33 +3,10 @@
 #(  O )) __/ ) _) /    /\___ \ )( / \/ \    /    \ )(   \___ \  )( /    \( (__  )  ( 
 # \__/(__)  (____)\_)__)(____/(__)\_)(_/    \_/\_/(__)  (____/ (__)\_/\_/ \___)(__\_)
 
+name: "${COMPOSE_PROJECT_NAME:-opensim-ai}"
 services:
-    mariadb:
-        image: mariadb:11
-        restart: unless-stopped
-        environment:
-            MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD:-rootpassword}"
-            MARIADB_DATABASE: "${MARIADB_DATABASE:-opensim}"
-            MARIADB_USER: "${MARIADB_USER:-opensim}"
-            MARIADB_PASSWORD: "${MARIADB_PASSWORD:-opensimpassword}"
-        command: >
-            --character-set-server=utf8mb4
-            --collation-server=utf8mb4_unicode_ci
-        volumes:
-            - opensim-mariadb:/var/lib/mysql
-        healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    'mariadb-admin ping -h localhost -u root --password="$$MARIADB_ROOT_PASSWORD" --silent',
-                ]
-            interval: 10s
-            timeout: 5s
-            retries: 12
-            start_period: 30s
-
     spawner:
-        image: "${OPENSIM_SPAWNER_IMAGE:-bithatch/opensim-spawner:latest}"
+        image: "${OPENSIM_SPAWNER_IMAGE:-${OPENSIM_GROUP:-bithatch/}opensim-spawner:${OPENSIM_TAG:-latest}}"
         restart: unless-stopped
         pull_policy: missing
         environment:
@@ -55,57 +32,22 @@ services:
             OPENSIM_BOT_EMAIL: "${OPENSIM_BOT_EMAIL:-bot@localhost}"
             OPENSIM_BOT_APPEARANCE: "${OPENSIM_BOT_APPEARANCE:-Cube Bot}"
             OPENSIM_BOT_GENDER: "${OPENSIM_BOT_GENDER:-neutral}"
-            OPENSIM_LOGIN_URI: "${OPENSIM_LOGIN_URI:-http://${OPENSIM_GRID_SERVICES:-${COMPOSE_PROJECT_NAME:-opensim-ai}-grid-services}:9000}"
-            OPENSIM_LOGIN_START: "${OPENSIM_LOGIN_START:-last}"
             OPENSIM_SPAWNER_HTTP_HOST: "${OPENSIM_SPAWNER_HTTP_HOST:-0.0.0.0}"
             OPENSIM_SPAWNER_HTTP_PORT: "${OPENSIM_SPAWNER_HTTP_PORT:-8993}"
-            OPENSIM_SPAWNER_TOKEN: "${OPENSIM_SPAWNER_TOKEN:-}"
             OPENSIM_SPAWNER_FIRST_PORT: "${OPENSIM_SPAWNER_FIRST_PORT:-9000}"
             OPENSIM_SPAWNER_LAST_PORT: "${OPENSIM_SPAWNER_LAST_PORT:-9015}"
-            OPENSIM_GRID_SERVICES: "${OPENSIM_GRID_SERVICES:-${COMPOSE_PROJECT_NAME:-opensim-ai}-grid-services}"
             OPENSIM_CONSOLE_USER: "${OPENSIM_CONSOLE_USER:-ConsoleUser}"
             OPENSIM_CONSOLE_PASS: "${OPENSIM_CONSOLE_PASS:-ConsolePass}"
             SPAWNER_HOST: "${SPAWNER_HOST:-${COMPOSE_PROJECT_NAME:-opensim-ai}-spawner-1}"
-            OPENSIM_METAVERSE2MCP_IMAGE: "${OPENSIM_METAVERSE2MCP_IMAGE:-bithatch/opensim-metaverse2mcp:latest}"
-            OPENSIM_SIMULATOR_IMAGE: "${OPENSIM_SIMULATOR_IMAGE:-bithatch/opensim-simulator:latest}"
-            OPENSIM_OPENCODE_IMAGE: "${OPENSIM_OPENCODE_IMAGE:-bithatch/opensim-opencode:latest}"
-            OPENSIM_DATABASE2MCP_IMAGE: "${OPENSIM_DATABASE2MCP_IMAGE:-bithatch/opensim-database2mcp:latest}"
-            METAVERSE_MCP_TRANSPORT: "${METAVERSE_MCP_TRANSPORT:-http}"
-            METAVERSE_MCP_HOST: "${METAVERSE_MCP_HOST:-0.0.0.0}"
-            METAVERSE_MCP_PORT: "${METAVERSE_MCP_PORT:-8999}"
-            METAVERSE_MCP_HTTP_ENDPOINT: "${METAVERSE_MCP_HTTP_ENDPOINT:-/mcp}"
-            METAVERSE_MCP_HTTP_DISALLOW_DELETE: "${METAVERSE_MCP_HTTP_DISALLOW_DELETE:-false}"
-            METAVERSE_MCP_DIAGNOSTICS: "${METAVERSE_MCP_DIAGNOSTICS:-false}"
-            OPENSIM_LOGIN_TIMEOUT_SECONDS: "${OPENSIM_LOGIN_TIMEOUT_SECONDS:-30}"
-            CONSOLE_MCP_PORT: "${CONSOLE_MCP_PORT:-8997}"
-            CONSOLE_MCP_HTTP_ENDPOINT: "${CONSOLE_MCP_HTTP_ENDPOINT:-/mcp}"
-            CONSOLE_MCP_HTTP_BEARER_TOKEN: "${CONSOLE_MCP_HTTP_BEARER_TOKEN}"
-            OPENCODE_SCHEME: "${OPENCODE_SCHEME:-http}"
-            OPENCODE_HOST: "${OPENCODE_CHAT_HOST:-0.0.0.0}"
-            OPENCODE_PORT: "${OPENCODE_CHAT_PORT:-${OPENCODE_PORT:-8998}}"
-            OPENCODE_REQUEST_TIMEOUT_SECONDS: "${OPENCODE_REQUEST_TIMEOUT_SECONDS:-1800}"
-            OPENCODE_INITIAL_PROVIDER: "${OPENCODE_INITIAL_PROVIDER:-}"
-            OPENCODE_INITIAL_MODEL: "${OPENCODE_INITIAL_MODEL:-}"
-            PROMPT_HANDLING_ENABLED: "${PROMPT_HANDLING_ENABLED:-true}"
-            PROMPT_PROJECT_AGENTS_ENABLED: "${PROMPT_PROJECT_AGENTS_ENABLED:-true}"
-            PROMPT_NOTECARD_REQUIRE_HANDLER: "${PROMPT_NOTECARD_REQUIRE_HANDLER:-true}"
             OPENSIM_NETWORK: "${OPENSIM_NETWORK:-${COMPOSE_PROJECT_NAME:-opensim-ai}_default}"
             COMPOSE_PROJECT_NAME: "${COMPOSE_PROJECT_NAME:-opensim-ai}"
-            BLENDER_MCP_PORT: "${BLENDER_MCP_PORT:-8996}"
-            WEAR_FOLDER_NAME: "${WEAR_FOLDER_NAME:-Cube Bot}"
-            OPENSIM_HANDLER_CONFIG: "${OPENSIM_HANDLER_CONFIG:-/config/handlers.json}"
-            METAVERSE_BRIDGE_TRUST_STATE_FILE: "${METAVERSE_BRIDGE_TRUST_STATE_FILE:-/config/bridges/{bot_uuid}.json}"
             OPENSIM_PROVISION_MODE: "${OPENSIM_PROVISION_MODE:-guided}"
-            MARIADB_HOST: "${MARIADB_HOST:-${COMPOSE_PROJECT_NAME:-opensim-ai}-mariadb-1}"
-            MARIADB_IMAGE: "${MARIADB_IMAGE:-mariadb:11}"
-            MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD:-rootpassword}"
-            MARIADB_DATABASE: "${MARIADB_DATABASE:-opensim}"
-            MARIADB_USER: "${MARIADB_USER:-opensim}"
-            MARIADB_PASSWORD: "${MARIADB_PASSWORD:-opensimpassword}"
+            OPENSIM_TAG: "${OPENSIM_TAG:-latest}"
+            OPENSIM_GROUP: "${OPENSIM_GROUP:-bithatch/}"
         volumes:
             - opensim-config:/config
             - opensim-workspace:/workspace
-            - spawner-data:/data
+            - opensim-spawner-data:/data
             - /var/run/docker.sock:/var/run/docker.sock
         ports:
             - "${OPENSIM_SPAWNER_HTTP_PORT:-8993}:${OPENSIM_SPAWNER_HTTP_PORT:-8993}/tcp"
@@ -119,18 +61,11 @@ services:
             timeout: 5s
             retries: 24
             start_period: 20s
-        depends_on:
-            mariadb:
-                condition: service_healthy
 
 volumes:
-    opensim-mariadb:
-    opensim-workspace:
-    opensim-templates:
+    opensim-spawner-data:
     opensim-config:
-    opensim-assetcache:
-    opensim-maptiles:
-    spawner-data:
+    opensim-workspace:
 
 networks:
     default:
