@@ -6,7 +6,7 @@ Each component in the stack is managed by a [dedicated controller](https://githu
 
 Run with a single Docker command, or use Docker compose.
 
-*Version 20260912 contains breaking changes, see [CHANGES.md](CHANGES.md)
+*Version 20260912 contains breaking changes, see [CHANGES.md](CHANGES.md)*
 
 ## Quick Start
 
