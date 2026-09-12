@@ -6,6 +6,8 @@ Each component in the stack is managed by a [dedicated controller](https://githu
 
 Run with a single Docker command, or use Docker compose.
 
+*Version 20260912 contains breaking changes, see [CHANGES.md](CHANGES.md)
+
 ## Quick Start
 
 *In all cases replace `myhostname` with whatever hostname you will be using to access both your grid and the web user interface. If your grid is limited to your LAN, your computer name will usually suffice.*
