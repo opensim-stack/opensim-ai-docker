@@ -31,15 +31,18 @@ if [ -z "${OPENSIM_HOSTNAME}" ]; then
     exit 1
 fi
 
-docker network create opensim-ai && docker run -it \
+echo "Starting OpenSim Spawner with hostname: ${OPENSIM_HOSTNAME} and image: ${OPENSIM_SPAWNER_IMAGE:-${OPENSIM_GROUP:-bithatch/}opensim-spawner:${OPENSIM_TAG:-latest}}"
+docker network create opensim-ai_default && docker run -it \
   --restart unless-stopped \
   --pull missing \
   --name opensim-ai-spawner \
-  --network opensim-ai \
+  --network opensim-ai_default \
   -v opensim-ai_opensim-config:/config \
   -v opensim-ai_opensim-workspace:/workspace \
   -v opensim-ai_opensim-spawner-data:/data \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -p 8993:8993/tcp \
   -e OPENSIM_HOSTNAME="${OPENSIM_HOSTNAME}" \
+  -e OPENSIM_GROUP="${OPENSIM_GROUP:-bithatch/}" \
+  -e OPENSIM_HOSTOPENSIM_TAGNAME="${OPENSIM_TAG:-latest}" \
   ${OPENSIM_SPAWNER_IMAGE:-${OPENSIM_GROUP:-bithatch/}opensim-spawner:${OPENSIM_TAG:-latest}}
