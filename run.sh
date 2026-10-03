@@ -44,5 +44,5 @@ docker network create opensim-ai_default && docker run -it \
   -p 8993:8993/tcp \
   -e OPENSIM_HOSTNAME="${OPENSIM_HOSTNAME}" \
   -e OPENSIM_GROUP="${OPENSIM_GROUP:-bithatch/}" \
-  -e OPENSIM_HOSTOPENSIM_TAGNAME="${OPENSIM_TAG:-latest}" \
+  -e OPENSIM_TAG="${OPENSIM_TAG:-latest}" \
   ${OPENSIM_SPAWNER_IMAGE:-${OPENSIM_GROUP:-bithatch/}opensim-spawner:${OPENSIM_TAG:-latest}}
